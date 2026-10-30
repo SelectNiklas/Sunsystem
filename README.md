@@ -116,3 +116,13 @@ src/
   ui/loadingScreen.ts         Ladebildschirm
   main.ts                     Einstiegspunkt, Render-Loop
 ```
+
+## GIT-Befehle
+
+```
+  git status            # prüfen, was alles geändert ist
+  git add -A            # alles aufnehmen (neu, geändert, gelöscht)
+  git status            # kontrollieren: alles unter "Changes to be committed"?
+  git commit -m "..."
+  git push
+```
