@@ -61,7 +61,7 @@ export class AsteroidBelt {
 
     for (let s = 0; s < ASTEROID_BELT.shapes; s++) {
       const count = Math.min(perShape, ASTEROID_BELT.count - s * perShape);
-      const geometry = createRockGeometry(ASTEROID_BELT.seed + s * 101, 1, 1.15 + s * 0.35);
+      const geometry = createRockGeometry(ASTEROID_BELT.seed + s * 101, ASTEROID_BELT.detail, 1.15 + s * 0.35);
       this.fillInstanceAttributes(geometry, count, random);
 
       const mesh = new THREE.InstancedMesh(geometry, material, count);

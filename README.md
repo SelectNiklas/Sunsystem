@@ -70,6 +70,14 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
 - Die Gesteinsformen sind verformte Ikosaeder mit flacher Schattierung (`asteroids/rock.ts`),
   reproduzierbar über einen festen Zufalls-Seed.
 
+## Leistung
+
+- Pixel-Ratio höchstens 2; auf hochauflösenden Displays (Pixel-Ratio > 1,5) ohne MSAA.
+- **Automatische Qualitätsanpassung** (`RENDER.adaptive`): Liegt die Bildrate nach dem Start unter
+  ca. 56 FPS, wird erst MSAA abgeschaltet und dann die Pixel-Ratio in 0,25er-Schritten bis 1 gesenkt.
+  Bringt ein Schritt keine Verbesserung (z. B. weil der Akkubetrieb die Bildrate begrenzt), wird er
+  zurückgenommen. Die aktuelle Stufe steht in der Statusleiste unter „Auflösung“.
+
 ## Voraussetzungen
 
 - [Node.js](https://nodejs.org/) ≥ 20.19 (LTS empfohlen)

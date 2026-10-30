@@ -14,6 +14,10 @@ export interface SceneContext {
   composer: EffectComposer;
   bloomPass: UnrealBloomPass;
   render(): void;
+  /** Aktuelle Pixel-Ratio und MSAA-Samples. */
+  readonly quality: { pixelRatio: number; samples: number };
+  /** Senkt/hebt die Render-Qualität (Pixel-Ratio wird zusätzlich durch das Gerät begrenzt). */
+  setQuality(pixelRatio: number, samples: number): void;
 }
 
 /** Erzeugt Renderer, Szene, Kamera, Controls und die Postprocessing-Kette. */
@@ -21,6 +25,9 @@ export function createSceneContext(container: HTMLElement): SceneContext {
   const width = window.innerWidth;
   const height = window.innerHeight;
   const pixelRatio = Math.min(window.devicePixelRatio, RENDER.maxPixelRatio);
+  const samples = pixelRatio > RENDER.msaaMaxPixelRatio ? 0 : RENDER.msaaSamples;
+  // Obergrenze aus der automatischen Qualitätsanpassung.
+  let pixelRatioCap = Infinity;
 
   // Antialiasing übernimmt MSAA im Composer-Render-Target.
   const renderer = new THREE.WebGLRenderer({
@@ -53,7 +60,7 @@ export function createSceneContext(container: HTMLElement): SceneContext {
 
   const renderTarget = new THREE.WebGLRenderTarget(width * pixelRatio, height * pixelRatio, {
     type: THREE.HalfFloatType,
-    samples: RENDER.msaaSamples,
+    samples,
   });
   const composer = new EffectComposer(renderer, renderTarget);
   composer.setPixelRatio(pixelRatio);
@@ -69,17 +76,21 @@ export function createSceneContext(container: HTMLElement): SceneContext {
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
 
-  window.addEventListener('resize', () => {
+  const quality = { pixelRatio, samples };
+
+  const applySize = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const pr = Math.min(window.devicePixelRatio, RENDER.maxPixelRatio);
+    const pr = Math.min(window.devicePixelRatio, RENDER.maxPixelRatio, pixelRatioCap);
+    quality.pixelRatio = pr;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(pr);
     renderer.setSize(w, h);
     composer.setPixelRatio(pr);
     composer.setSize(w, h);
-  });
+  };
+  window.addEventListener('resize', applySize);
 
   return {
     renderer,
@@ -89,5 +100,18 @@ export function createSceneContext(container: HTMLElement): SceneContext {
     composer,
     bloomPass,
     render: () => composer.render(),
+    quality,
+    setQuality(pr: number, msaa: number) {
+      if (msaa !== quality.samples) {
+        quality.samples = msaa;
+        // Die Render-Targets werden mit der neuen Sample-Zahl neu angelegt.
+        for (const target of [composer.renderTarget1, composer.renderTarget2]) {
+          target.samples = msaa;
+          target.dispose();
+        }
+      }
+      pixelRatioCap = pr;
+      applySize();
+    },
   };
 }

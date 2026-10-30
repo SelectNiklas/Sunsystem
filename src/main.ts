@@ -1,6 +1,7 @@
 import './style.css';
 import { AsteroidBelt } from './asteroids/belt';
 import { FreeAsteroids } from './asteroids/freeAsteroids';
+import { AdaptiveQuality } from './core/adaptiveQuality';
 import { createSceneContext } from './core/sceneContext';
 import { ScaleState } from './core/scale';
 import { SimClock } from './core/simClock';
@@ -88,7 +89,11 @@ async function init(): Promise<void> {
     onClick: toggleFocus,
   });
 
-  const stats = new StatsBar(document.querySelector<HTMLElement>('#statusbar .stats')!, renderer, scene, camera);
+  const stats = new StatsBar(document.querySelector<HTMLElement>('#statusbar .stats')!, renderer, scene, camera, () => {
+    const { pixelRatio, samples } = ctx.quality;
+    return `${pixelRatio.toFixed(2)}×${samples > 0 ? ` · MSAA ${samples}×` : ''}`;
+  });
+  const adaptive = new AdaptiveQuality(ctx, (pr) => starfield.setPixelRatio(pr));
 
   window.addEventListener('resize', () => starfield.setPixelRatio(renderer.getPixelRatio()));
 
@@ -133,6 +138,7 @@ async function init(): Promise<void> {
 
     ctx.render();
     stats.endFrame();
+    adaptive.update(timestamp);
   });
 }
 

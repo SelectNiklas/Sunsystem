@@ -79,7 +79,7 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 - Pixel-Ratio auf max. 2 begrenzen.
 
 ## Mobile Anwendung
-- Die Seite ist auf Smartphones im Hoch- und Querformat voll bedienbar.
+- Die Seite ist auf Smartphones im Hochformat voll bedienbar.
 - Touch-Steuerung: Drehen mit einem Finger, Zoomen und Verschieben mit zwei Fingern, Tippen auf einen Körper oder ein Label fokussiert ihn.
 - Die Panels verdecken die Szene höchstens teilweise:
   - Steuerung und Raumfahrtliste sind einklappbar (kleine Buttons). Die Raumfahrtliste kann z. B. eine waagerecht scrollbare Leiste sein.

@@ -546,6 +546,11 @@ export const ASTEROID_BELT = {
   count: 5000,
   /** Verschiedene Gesteinsformen (je ein InstancedMesh, also je ein Draw Call). */
   shapes: 3,
+  /**
+   * Unterteilungsstufe des Ikosaeders: 0 → 20 Dreiecke pro Brocken. Die Bahn
+   * wird pro Eckpunkt im Shader gelöst, die Eckpunktzahl bestimmt also die Last.
+   */
+  detail: 0,
   /** Große Halbachse in AE. */
   aMin: 2.15,
   aMax: 3.3,
@@ -737,6 +742,26 @@ export const RENDER = {
   maxPixelRatio: 2,
   /** MSAA-Samples der Composer-Render-Targets (0 = aus). */
   msaaSamples: 4,
+  /**
+   * Ab dieser Pixel-Ratio wird MSAA abgeschaltet: Auf hochauflösenden
+   * Displays sind Treppenstufen kaum sichtbar, die Kosten aber am höchsten.
+   */
+  msaaMaxPixelRatio: 1.5,
+  /**
+   * Automatische Qualitätsanpassung: Liegt die Bildrate über ein Messfenster
+   * unter targetFps, wird erst MSAA abgeschaltet, dann die Pixel-Ratio in
+   * Schritten gesenkt (nicht unter minPixelRatio). Bringt ein Schritt weniger
+   * als minGainFps, wird er zurückgenommen und die Anpassung beendet
+   * (z. B. bei Bildratenbegrenzung im Akkubetrieb).
+   */
+  adaptive: {
+    targetFps: 56,
+    windowSeconds: 2,
+    warmupSeconds: 3,
+    pixelRatioStep: 0.25,
+    minPixelRatio: 1,
+    minGainFps: 3,
+  },
   toneMappingExposure: 1.0,
   ambientLight: { color: 0x334466, intensity: 0.12 },
   bloom: {

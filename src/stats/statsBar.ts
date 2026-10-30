@@ -29,6 +29,8 @@ export class StatsBar {
     private readonly renderer: THREE.WebGLRenderer,
     private readonly scene: THREE.Scene,
     private readonly camera: THREE.Camera,
+    /** Aktuelle Render-Qualität (Pixel-Ratio, MSAA) als Kurztext. */
+    private readonly quality: () => string,
   ) {
     this.el = container;
     const items: [string, string][] = [
@@ -41,6 +43,7 @@ export class StatsBar {
       ['tex', 'Texturen'],
       ['heap', 'JS-Heap'],
       ['objects', 'Objekte'],
+      ['quality', 'Auflösung'],
     ];
     for (const [key, label] of items) {
       const item = document.createElement('span');
@@ -82,6 +85,7 @@ export class StatsBar {
     f.tex.textContent = String(info.memory.textures);
     f.heap.textContent = heapText();
     f.objects.textContent = String(this.countRenderedObjects());
+    f.quality.textContent = this.quality();
 
     this.frames = 0;
     this.cpuTimeSum = 0;
