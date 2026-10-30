@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { FocusTarget } from '../navigation/focusTargets';
 
-/** Liste links zum schnellen Anspringen: Himmelskörper und Raumfahrzeuge. */
+/** Liste links zum schnellen Anspringen der Raumfahrzeuge. */
 export class PlanetList {
   private readonly items = new Map<string, HTMLButtonElement>();
 
@@ -14,8 +14,8 @@ export class PlanetList {
     root.id = 'planet-list';
     root.className = 'glass';
 
+    // Himmelskörper werden direkt in der Szene angeklickt; die Liste zeigt nur die Raumfahrt.
     const isCraft = (t: FocusTarget) => t.kind === 'satellite' || t.kind === 'rocket';
-    this.addSection(root, 'Himmelskörper', targets.filter((t) => !isCraft(t)), onSelect);
     this.addSection(root, 'Raumfahrt', targets.filter(isCraft), onSelect);
 
     const overview = document.createElement('button');
@@ -50,8 +50,6 @@ export class PlanetList {
     const list = document.createElement('ul');
     for (const target of targets) {
       const li = document.createElement('li');
-      // Der Mond wird unter der Erde eingerückt.
-      if (target.kind === 'moon') li.className = 'sub';
       const btn = document.createElement('button');
       btn.innerHTML = `<span class="dot" style="background:#${new THREE.Color(target.color).getHexString()}"></span>`;
       btn.append(target.name);

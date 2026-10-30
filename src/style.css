@@ -73,15 +73,6 @@ a {
   user-select: none;
 }
 
-#planet-list ul + h3 {
-  margin-top: 12px;
-}
-
-#planet-list li.sub button {
-  padding-left: 22px;
-  font-size: 12px;
-}
-
 #planet-list h3,
 #info-panel dt {
   font-size: 10px;

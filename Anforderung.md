@@ -34,7 +34,6 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 ## Navigation
 - OrbitControls als Basis (Zoom, Drehen, Verschieben).
 - Klick auf einen Planeten → Kamera fliegt weich dorthin (Tweening) und folgt ihm.
-- Planetenliste im UI zum schnellen Anspringen.
 - Tastatur: Pfeiltasten/WASD für freies Fliegen, ESC zurück zur Gesamtansicht.
 - Logarithmischer Tiefenpuffer (`logarithmicDepthBuffer: true`), um Z-Fighting bei großen Distanzen zu vermeiden.
 
@@ -69,7 +68,7 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 - Halbtransparent, dezent, aktualisiert ca. 2× pro Sekunde.
 
 ## UI / Design
-- Dunkles, minimalistisches Overlay (Glassmorphism-Panel oben rechts für Steuerung, Planetenliste links).
+- Dunkles, minimalistisches Overlay (Glassmorphism-Panel oben rechts für Steuerung).
 - Beim Hover über ein Objekt: Name; beim Klick: Infopanel mit Kerndaten (Durchmesser, Abstand, Umlaufzeit, Tageslänge, Anzahl Monde).
 - Ladebildschirm mit Fortschritt, solange Texturen laden.
 - Responsiv, Resize-Handling.
@@ -83,7 +82,7 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 - Die Seite ist auf Smartphones im Hoch- und Querformat voll bedienbar.
 - Touch-Steuerung: Drehen mit einem Finger, Zoomen und Verschieben mit zwei Fingern, Tippen auf einen Körper oder ein Label fokussiert ihn.
 - Die Panels verdecken die Szene höchstens teilweise:
-  - Steuerung und Planetenliste sind einklappbar (kleine Buttons). Die Planetenliste kann z. B. eine waagerecht scrollbare Leiste sein.
+  - Steuerung und Raumfahrtliste sind einklappbar (kleine Buttons). Die Raumfahrtliste kann z. B. eine waagerecht scrollbare Leiste sein.
   - Das Infopanel erscheint als Leiste vom unteren Rand. Kein Wert wird abgeschnitten.
 - Die Statusleiste zeigt auf kleinen Bildschirmen nur die wichtigsten Werte (z. B. FPS, Frame-Time, Draw Calls).
 - Der Kameraabstand beim Fokus berücksichtigt das Seitenverhältnis, damit ein Planet auch im Hochformat vollständig ins Bild passt.
@@ -96,7 +95,7 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 Arbeite in Etappen und stoppe nach jeder Etappe, damit ich prüfen kann:
 1. Projekt-Setup, Szene, Kamera, Sternenhimmel, Sonne, Statusleiste
 2. Planeten mit Texturen, Maßstabslogik, Kepler-Bahnen, Zeitsteuerung
-3. Navigation (Fokus, Kamera-Flug, Planetenliste, Infopanel)
+3. Navigation (Fokus, Kamera-Flug, Infopanel)
 4. Erdmond, Satelliten, Rakete
 5. Asteroidengürtel, freie Asteroiden, Bloom, Feinschliff, README
 6. Anpassung für Mobilgeräte (siehe Abschnitt „Mobile Anwendung“)

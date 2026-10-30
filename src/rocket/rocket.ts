@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { ROCKET } from '../config/solarSystemData';
+import { Highlight } from '../core/highlight';
 import type { Moon } from '../moon/moon';
 import { createPickProxy } from '../satellites/satellites';
 import { Exhaust } from './exhaust';
@@ -34,6 +35,7 @@ export class Rocket {
   readonly object = new THREE.Group();
   readonly pickProxy: THREE.Mesh;
   readonly radius = ROCKET.length / 2;
+  readonly highlight: Highlight;
   phase: MissionPhase = 'launch';
   /** Fortschritt des Transfers 0–1. */
   progress = 0;
@@ -51,15 +53,17 @@ export class Rocket {
   ) {
     this.group.name = 'Mondmission';
 
-    const model = new THREE.Mesh(createRocketGeometry(), [
+    const materials = [
       new THREE.MeshStandardMaterial({ color: 0xf2f2f0, roughness: 0.5, metalness: 0.2 }),
       new THREE.MeshStandardMaterial({ color: 0x2b2d33, roughness: 0.6, metalness: 0.5 }),
-    ]);
+    ];
+    const model = new THREE.Mesh(createRocketGeometry(), materials);
     model.scale.setScalar(ROCKET.length);
     model.raycast = () => {};
     this.pickProxy = createPickProxy(ROCKET.length);
     this.object.name = ROCKET.name;
     this.object.add(model, this.pickProxy);
+    this.highlight = new Highlight(this.object, ROCKET.length, materials);
 
     // Zwei Linien auf denselben Punkten: geplante Bahn (blass) und geflogener Teil.
     const positions = new THREE.BufferAttribute(new Float32Array(ROCKET.pathSegments * 3), 3);

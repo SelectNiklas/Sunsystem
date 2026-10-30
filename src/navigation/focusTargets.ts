@@ -30,6 +30,8 @@ export interface FocusTarget {
   radius(): number;
   viewDistance(): number;
   info(): InfoRow[];
+  /** Optionale Hervorhebung bei Auswahl (Raumfahrzeuge). */
+  setHighlighted?(on: boolean): void;
 }
 
 export function createFocusTargets(
@@ -146,6 +148,7 @@ function satelliteTarget(sat: Satellite): FocusTarget {
       { label: 'Exzentrizität', value: fmt(d.e, d.e > 0.05 ? 2 : 4) },
       { label: 'Umlaufzeit', value: formatMinutes(d.periodMin) },
     ],
+    setHighlighted: (on) => sat.highlight.set(on),
   };
 }
 
@@ -172,5 +175,6 @@ function rocketTarget(rocket: Rocket, scale: ScaleState): FocusTarget {
       { label: 'Abstand zur Erde', value: () => `≈ ${formatKm(scale.geoDistanceToKm(rocket.distanceUnits))}` },
       { label: 'Reale Flugzeit', value: 'ca. 3 Tage' },
     ],
+    setHighlighted: (on) => rocket.highlight.set(on),
   };
 }

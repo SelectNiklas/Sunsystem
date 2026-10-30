@@ -10,7 +10,8 @@ Interaktives 3D-Sonnensystem mit Vite, TypeScript und Three.js.
 | ----------------------------- | ----------------------------------------------- |
 | Maus über Objekt              | Name wird eingeblendet                          |
 | Klick auf Objekt              | Kamera fliegt hin und folgt ihm, Infopanel      |
-| Liste links                   | Himmelskörper, Satelliten und Rakete anspringen |
+| Erneuter Klick auf das Objekt | Zurück zur Gesamtansicht                        |
+| Liste links                   | Satelliten und Rakete anspringen                |
 | Linke Maustaste ziehen        | Drehen (auch beim Verfolgen)                    |
 | Mausrad                       | Zoomen                                          |
 | Rechte Maustaste ziehen       | Verschieben                                     |
@@ -51,6 +52,8 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
   wird. Start an der Erdoberfläche mit Triebwerksflamme (Partikel), Freiflug, Einschwenken in einen
   Mondorbit, danach Neustart. Geplante Bahn blass, geflogener Teil kräftig;
   beide werden mit dem Schalter „Orbitlinien“ ausgeblendet.
+- **Auswahl:** Ein ausgewähltes Raumfahrzeug bekommt einen leichten Lichthof und etwas Eigenleuchten,
+  damit es auch auf der Nachtseite erkennbar bleibt (`HIGHLIGHT`).
 
 ## Voraussetzungen
 
@@ -59,7 +62,7 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
 ## Starten
 
 ```bash
-npm install
+npm install        # npm.cmd wenn Probleme mit dem Ausführen von Skripten
 npm run dev        # Entwicklungsserver auf http://localhost:5173
 npm run build      # Typprüfung + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
@@ -108,7 +111,7 @@ src/
   rocket/                     Rakete (Transferbahn, Mondorbit) und Triebwerksflamme
   navigation/                 Fokusziele, Kameraflug/Verfolgen/freies Fliegen, Picking
   ui/controlPanel.ts          Steuerungspanel (Zeit, Ansicht)
-  ui/planetList.ts            Objektliste (Himmelskörper, Raumfahrt)
+  ui/planetList.ts            Objektliste (Raumfahrt)
   ui/infoPanel.ts             Infopanel mit Kerndaten
   ui/tooltip.ts               Name beim Überfahren mit der Maus
   stars/stars.ts              Milchstraßen-Skysphere + Points-Sternfeld

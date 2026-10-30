@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SATELLITES, type SatelliteData } from '../config/solarSystemData';
 import { KeplerOrbit } from '../core/astro';
+import { Highlight } from '../core/highlight';
 import type { ScaleState } from '../core/scale';
 import type { Planet } from '../planets/planet';
 import { createSatelliteMesh } from './models';
@@ -37,6 +38,7 @@ export class Satellite {
   /** Geozentrische Position in km (Äquatorsystem der Erde). */
   readonly positionKm = new THREE.Vector3();
   readonly radius = SATELLITES.modelSize / 2;
+  readonly highlight: Highlight;
   /** Aktueller Knoten (Grad), bei sonnensynchronen Bahnen veränderlich. */
   node: number;
   lineNode = Number.NaN;
@@ -61,6 +63,7 @@ export class Satellite {
     mesh.raycast = () => {};
     this.pickProxy = createPickProxy(SATELLITES.pickRadius);
     this.object.add(mesh, this.pickProxy);
+    this.highlight = new Highlight(this.object, 1, mesh.material);
 
     this.orbitLine = new THREE.LineLoop(
       new THREE.BufferGeometry().setAttribute(

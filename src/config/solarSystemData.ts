@@ -523,6 +523,16 @@ export const ROCKET = {
   viewDistance: 9,
 } as const;
 
+/** Leichter Schein um ein ausgewähltes Raumfahrzeug (auch auf der Nachtseite erkennbar). */
+export const HIGHLIGHT = {
+  color: 0xcfe2ff,
+  /** Durchmesser des Lichthofs relativ zur Modellgröße. */
+  glowSize: 1.8,
+  glowOpacity: 0.28,
+  /** Eigenleuchten als Anteil der Materialfarbe. */
+  emissive: 0.25,
+} as const;
+
 export const PLANET_RENDER = {
   /** LOD-Stufen: [Breiten-, Höhensegmente] der Kugel. */
   lodSegments: [

@@ -9,22 +9,13 @@ import type { SatelliteModel } from '../config/solarSystemData';
  * Geometrie verschmolzen → 2 Draw Calls pro Satellit.
  */
 
-const panelMaterial = new THREE.MeshStandardMaterial({
-  color: 0x22356e,
-  emissive: 0x0b1430,
-  roughness: 0.35,
-  metalness: 0.6,
-});
-
-const bodyMaterials = new Map<number, THREE.MeshStandardMaterial>();
+// Materialien je Modell (nicht geteilt), damit die Auswahl-Hervorhebung nur einen Satelliten betrifft.
+function panelMaterial(): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({ color: 0x22356e, emissive: 0x0b1430, roughness: 0.35, metalness: 0.6 });
+}
 
 function bodyMaterial(color: number): THREE.MeshStandardMaterial {
-  let m = bodyMaterials.get(color);
-  if (!m) {
-    m = new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.5 });
-    bodyMaterials.set(color, m);
-  }
-  return m;
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.45, metalness: 0.5 });
 }
 
 function box(w: number, h: number, d: number, x = 0, y = 0, z = 0): THREE.BufferGeometry {
@@ -95,6 +86,9 @@ function modelGeometry(model: SatelliteModel): THREE.BufferGeometry {
 }
 
 /** Erzeugt ein Satellitenmodell (Gruppe 0 = Körper, Gruppe 1 = Solarpanels). */
-export function createSatelliteMesh(model: SatelliteModel, color: number): THREE.Mesh {
-  return new THREE.Mesh(modelGeometry(model), [bodyMaterial(color), panelMaterial]);
+export function createSatelliteMesh(
+  model: SatelliteModel,
+  color: number,
+): THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial[]> {
+  return new THREE.Mesh(modelGeometry(model), [bodyMaterial(color), panelMaterial()]);
 }

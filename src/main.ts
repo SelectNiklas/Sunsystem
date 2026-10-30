@@ -4,7 +4,7 @@ import { ScaleState } from './core/scale';
 import { SimClock } from './core/simClock';
 import { loadTextures } from './core/textures';
 import { CameraController } from './navigation/cameraController';
-import { createFocusTargets } from './navigation/focusTargets';
+import { createFocusTargets, type FocusTarget } from './navigation/focusTargets';
 import { Picker } from './navigation/picker';
 import { Moon } from './moon/moon';
 import { PlanetSystem } from './planets/planets';
@@ -61,13 +61,15 @@ async function init(): Promise<void> {
   const nav = new CameraController(camera, controls);
   const infoPanel = new InfoPanel();
   const tooltip = new Tooltip();
-  const planetList = new PlanetList(
-    targets,
-    (t) => nav.focus(t),
-    () => nav.overview(),
-  );
+  // Erneuter Klick auf das gerade verfolgte Objekt führt zurück zur Gesamtansicht.
+  const toggleFocus = (t: FocusTarget) => (nav.target === t ? nav.overview() : nav.focus(t));
+  const planetList = new PlanetList(targets, toggleFocus, () => nav.overview());
 
+  let highlighted: FocusTarget | null = null;
   nav.onFocusChange((target) => {
+    highlighted?.setHighlighted?.(false);
+    target?.setHighlighted?.(true);
+    highlighted = target;
     planetList.setActive(target?.id ?? null);
     if (target) infoPanel.show(target);
     else infoPanel.hide();
@@ -75,7 +77,7 @@ async function init(): Promise<void> {
 
   const picker = new Picker(renderer.domElement, camera, targets, {
     onHover: (target, x, y) => (target ? tooltip.show(target.name, x, y) : tooltip.hide()),
-    onClick: (target) => nav.focus(target),
+    onClick: toggleFocus,
   });
 
   const stats = new StatsBar(document.querySelector<HTMLElement>('#statusbar .stats')!, renderer, scene, camera);
