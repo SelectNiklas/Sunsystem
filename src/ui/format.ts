@@ -16,5 +16,5 @@ export function formatMinutes(minutes: number): string {
 }
 
 export function formatKm(km: number): string {
-  return `${fmt(km, 0)} km`;
+  return km < 1 ? `${fmt(km * 1000, 0)} m` : `${fmt(km, 0)} km`;
 }

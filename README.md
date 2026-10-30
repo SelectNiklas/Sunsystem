@@ -2,14 +2,14 @@
 
 Interaktives 3D-Sonnensystem mit Vite, TypeScript und Three.js.
 
-> Stand: **Etappe 4** (Erdmond, Satelliten, Rakete Erde → Mond)
+> Stand: **Etappe 5** (Asteroidengürtel, einzelne Asteroiden, Feinschliff)
 
 ## Bedienung
 
 | Eingabe                       | Wirkung                                         |
 | ----------------------------- | ----------------------------------------------- |
 | Maus über Objekt              | Name wird eingeblendet                          |
-| Klick auf Objekt              | Kamera fliegt hin und folgt ihm, Infopanel      |
+| Klick auf Objekt              | Kamera fliegt hin und folgt ihm, Infopanel (auch einzelne Asteroiden) |
 | Erneuter Klick auf das Objekt | Zurück zur Gesamtansicht                        |
 | Liste links                   | Satelliten und Rakete anspringen                |
 | Linke Maustaste ziehen        | Drehen (auch beim Verfolgen)                    |
@@ -54,6 +54,21 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
   beide werden mit dem Schalter „Orbitlinien“ ausgeblendet.
 - **Auswahl:** Ein ausgewähltes Raumfahrzeug bekommt einen leichten Lichthof und etwas Eigenleuchten,
   damit es auch auf der Nachtseite erkennbar bleibt (`HIGHLIGHT`).
+
+## Asteroiden
+
+- **Hauptgürtel:** 5000 Objekte in drei `InstancedMesh`es (drei Gesteinsformen, also drei Draw Calls).
+  Jedes Objekt hat eigene Kepler-Elemente (a = 2,15–3,3 AE ohne die Kirkwood-Lücken, kleine
+  Exzentrizität und Inklination). Bahnposition, Abstandsabbildung und Taumeln berechnet der
+  Vertex-Shader, die CPU hat damit pro Frame keine Arbeit. Der Periheldistand ist auf 1,85 AE
+  begrenzt, damit der Gürtel in der komprimierten Darstellung nicht in die Marsbahn ragt.
+- **Einzelne Asteroiden:** Ceres, Vesta, Eros, Apophis, Bennu, Ryugu, Phaethon und Ikarus auf
+  ihren (gerundeten) echten Bahnen, mit eigener Orbitlinie, anklickbar und mit Infopanel. Die
+  mittlere Anomalie ist geschätzt, die Position auf der Bahn stimmt daher nur ungefähr.
+  Größen folgen der Radienformel; aus der Ferne werden die Modelle mitvergrößert
+  (`FREE_ASTEROIDS.apparentSize`).
+- Die Gesteinsformen sind verformte Ikosaeder mit flacher Schattierung (`asteroids/rock.ts`),
+  reproduzierbar über einen festen Zufalls-Seed.
 
 ## Voraussetzungen
 
@@ -107,6 +122,7 @@ src/
   sun/sun.ts                  Sonne (emissiv, Korona, PointLight)
   planets/                    Planeten, Erde (Tag/Nacht, Wolken, Atmosphäre), Ringe, Orbitlinien
   moon/moon.ts                Erdmond (Bahn, gebundene Rotation, Orbitlinie)
+  asteroids/                  Asteroidengürtel (Instancing + Shader), einzelne Asteroiden, Gesteinsformen
   satellites/                 Satellitenbahnen und Low-Poly-Modelle
   rocket/                     Rakete (Transferbahn, Mondorbit) und Triebwerksflamme
   navigation/                 Fokusziele, Kameraflug/Verfolgen/freies Fliegen, Picking

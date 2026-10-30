@@ -533,6 +533,157 @@ export const HIGHLIGHT = {
   emissive: 0.25,
 } as const;
 
+// ---------------------------------------------------------------------------
+// Asteroiden
+// ---------------------------------------------------------------------------
+
+/**
+ * Hauptgürtel zwischen Mars und Jupiter. Jeder Asteroid hat eigene
+ * Kepler-Elemente; Bahn, Abstandsabbildung und Taumeln rechnet der
+ * Vertex-Shader (keine CPU-Arbeit pro Frame).
+ */
+export const ASTEROID_BELT = {
+  count: 5000,
+  /** Verschiedene Gesteinsformen (je ein InstancedMesh, also je ein Draw Call). */
+  shapes: 3,
+  /** Große Halbachse in AE. */
+  aMin: 2.15,
+  aMax: 3.3,
+  /** Kirkwood-Lücken (Bahnresonanzen mit Jupiter) in AE und ihre halbe Breite. */
+  kirkwoodGaps: [2.502, 2.825, 2.958, 3.279] as const,
+  gapHalfWidth: 0.025,
+  eMax: 0.2,
+  /**
+   * Kleinster Periheldistand in AE: hält die Gürtelobjekte in der
+   * komprimierten Darstellung von der Marsbahn (Aphel + Radius) fern.
+   */
+  qMin: 1.85,
+  /** Inklination: Betrag einer Normalverteilung (σ), begrenzt auf iMax (Grad). */
+  iSigma: 6,
+  iMax: 20,
+  /** Größe in Szeneneinheiten (Potenzgesetz: viele kleine, wenige große). */
+  sizeMin: 0.8,
+  sizeMax: 4.5,
+  sizeExponent: 2.2,
+  /** Taumeln in Grad pro Echtzeit-Sekunde. */
+  spinDegPerSec: { min: 5, max: 60 },
+  colors: [0x8a8178, 0x6f655b, 0x9b8a76, 0x5c5752] as const,
+  seed: 2026,
+} as const;
+
+export interface FreeAsteroidData {
+  id: string;
+  name: string;
+  /** Mittlerer Radius in km (Darstellung über SCALE.radius). */
+  radiusKm: number;
+  /** Seitenverhältnis des Modells (Länge zu Breite). */
+  elongation: number;
+  /** Verformung des Modells (0 = Kugel, 1 = kantiger Brocken). */
+  irregularity: number;
+  color: number;
+  type: string;
+  /**
+   * Bahnelemente gerundet (JPL SBDB); die mittlere Anomalie ist geschätzt,
+   * die Position auf der Bahn also nur ungefähr.
+   */
+  orbit: OrbitalElements;
+}
+
+/** Einzelne, frei fliegende Asteroiden (Erdbahnkreuzer und zwei große Gürtelobjekte). */
+export const FREE_ASTEROIDS = {
+  /** Aus der Ferne wachsen die Modelle mit: Radius = Kameraabstand · apparentSize. */
+  apparentSize: 0.004,
+  maxRadius: 14,
+  /** Unterteilungsstufe des Ikosaeders (2 → 320 Dreiecke). */
+  detail: 2,
+  /** Radius der Klickfläche relativ zum Modellradius. */
+  pickRadius: 2.2,
+  orbitColor: 0x9c8f7d,
+  orbitOpacity: 0.22,
+  list: [
+    {
+      id: 'ceres',
+      name: 'Ceres',
+      radiusKm: 469.7,
+      elongation: 1.05,
+      irregularity: 0.2,
+      color: 0x8d877f,
+      type: 'Zwergplanet, Hauptgürtel',
+      orbit: { a: 2.7675, e: 0.0785, i: 10.59, node: 80.3, peri: 73.6, M0: 77, periodDays: 1680 },
+    },
+    {
+      id: 'vesta',
+      name: 'Vesta',
+      radiusKm: 262.7,
+      elongation: 1.15,
+      irregularity: 0.6,
+      color: 0xa39582,
+      type: 'Hauptgürtel',
+      orbit: { a: 2.3615, e: 0.0887, i: 7.14, node: 103.8, peri: 151.2, M0: 20, periodDays: 1325 },
+    },
+    {
+      id: 'eros',
+      name: 'Eros',
+      radiusKm: 8.4,
+      elongation: 2.6,
+      irregularity: 1,
+      color: 0xa08c70,
+      type: 'Amor-Asteroid (erdnah)',
+      orbit: { a: 1.4583, e: 0.2229, i: 10.83, node: 304.3, peri: 178.8, M0: 190, periodDays: 643 },
+    },
+    {
+      id: 'apophis',
+      name: 'Apophis',
+      radiusKm: 0.17,
+      elongation: 1.6,
+      irregularity: 1,
+      color: 0x8f8678,
+      type: 'Aten-Asteroid (erdnah)',
+      orbit: { a: 0.9224, e: 0.1912, i: 3.34, node: 204.4, peri: 126.4, M0: 250, periodDays: 324 },
+    },
+    {
+      id: 'bennu',
+      name: 'Bennu',
+      radiusKm: 0.25,
+      elongation: 1.1,
+      irregularity: 0.5,
+      color: 0x5a5550,
+      type: 'Apollo-Asteroid (erdnah)',
+      orbit: { a: 1.1264, e: 0.2037, i: 6.03, node: 2.06, peri: 66.2, M0: 100, periodDays: 437 },
+    },
+    {
+      id: 'ryugu',
+      name: 'Ryugu',
+      radiusKm: 0.45,
+      elongation: 1.1,
+      irregularity: 0.6,
+      color: 0x55504b,
+      type: 'Apollo-Asteroid (erdnah)',
+      orbit: { a: 1.1896, e: 0.1902, i: 5.88, node: 251.6, peri: 211.4, M0: 300, periodDays: 474 },
+    },
+    {
+      id: 'phaethon',
+      name: 'Phaethon',
+      radiusKm: 2.9,
+      elongation: 1.3,
+      irregularity: 0.8,
+      color: 0x7a7470,
+      type: 'Apollo-Asteroid, sonnennah',
+      orbit: { a: 1.271, e: 0.8898, i: 22.26, node: 265.2, peri: 322.2, M0: 150, periodDays: 523 },
+    },
+    {
+      id: 'icarus',
+      name: 'Ikarus',
+      radiusKm: 0.7,
+      elongation: 1.4,
+      irregularity: 1,
+      color: 0x92877a,
+      type: 'Apollo-Asteroid, sonnennah',
+      orbit: { a: 1.078, e: 0.827, i: 22.8, node: 87.95, peri: 31.4, M0: 60, periodDays: 409 },
+    },
+  ] satisfies readonly FreeAsteroidData[],
+} as const;
+
 export const PLANET_RENDER = {
   /** LOD-Stufen: [Breiten-, Höhensegmente] der Kugel. */
   lodSegments: [

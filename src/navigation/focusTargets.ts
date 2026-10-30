@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { FreeAsteroid, FreeAsteroids } from '../asteroids/freeAsteroids';
 import { AU_KM, MOON, NAVIGATION, ROCKET, SUN } from '../config/solarSystemData';
 import type { ScaleState } from '../core/scale';
 import type { Moon } from '../moon/moon';
@@ -9,7 +10,7 @@ import type { Satellite, SatelliteSystem } from '../satellites/satellites';
 import type { Sun } from '../sun/sun';
 import { fmt, formatHours, formatKm, formatMinutes, formatPeriod } from '../ui/format';
 
-export type TargetKind = 'sun' | 'planet' | 'moon' | 'satellite' | 'rocket';
+export type TargetKind = 'sun' | 'planet' | 'moon' | 'asteroid' | 'satellite' | 'rocket';
 
 /** Zeile im Infopanel; eine Funktion als Wert wird laufend aktualisiert. */
 export interface InfoRow {
@@ -38,6 +39,7 @@ export function createFocusTargets(
   sun: Sun,
   planets: PlanetSystem,
   moon: Moon,
+  asteroids: FreeAsteroids,
   satellites: SatelliteSystem,
   rocket: Rocket,
   scale: ScaleState,
@@ -66,6 +68,7 @@ export function createFocusTargets(
     targets.push(planetTarget(planet));
     if (planet.data.id === 'earth') targets.push(moonTarget(moon));
   }
+  for (const asteroid of asteroids.asteroids) targets.push(asteroidTarget(asteroid));
   for (const sat of satellites.satellites) targets.push(satelliteTarget(sat));
   targets.push(rocketTarget(rocket, scale));
   return targets;
@@ -122,6 +125,35 @@ function moonTarget(moon: Moon): FocusTarget {
       { label: 'Tageslänge', value: `${fmt(MOON.info.synodicMonthDays, 1)} Tage (gebunden)` },
       { label: 'Achsneigung', value: `${fmt(MOON.info.axialTiltDeg, 2)}°` },
       { label: 'Monde', value: '0' },
+    ],
+  };
+}
+
+function asteroidTarget(asteroid: FreeAsteroid): FocusTarget {
+  const d = asteroid.data;
+  return {
+    id: d.id,
+    name: d.name,
+    kind: 'asteroid',
+    color: d.color,
+    object: asteroid.object,
+    pickable: asteroid.pickProxy,
+    radius: () => asteroid.radius,
+    viewDistance: () => asteroid.radius * 5,
+    info: () => [
+      { label: 'Typ', value: d.type },
+      { label: 'Durchmesser', value: `≈ ${formatKm(d.radiusKm * 2)}` },
+      {
+        label: 'Abstand zur Sonne',
+        value: () => {
+          const au = asteroid.helioAU.length();
+          return `${fmt(au, 3)} AE · ${fmt((au * AU_KM) / 1e6, 1)} Mio. km`;
+        },
+      },
+      { label: 'Große Halbachse', value: `${fmt(d.orbit.a, 3)} AE` },
+      { label: 'Exzentrizität', value: fmt(d.orbit.e, 3) },
+      { label: 'Inklination', value: `${fmt(d.orbit.i, 1)}°` },
+      { label: 'Umlaufzeit', value: formatPeriod(d.orbit.periodDays) },
     ],
   };
 }

@@ -1,4 +1,6 @@
 import './style.css';
+import { AsteroidBelt } from './asteroids/belt';
+import { FreeAsteroids } from './asteroids/freeAsteroids';
 import { createSceneContext } from './core/sceneContext';
 import { ScaleState } from './core/scale';
 import { SimClock } from './core/simClock';
@@ -46,10 +48,16 @@ async function init(): Promise<void> {
   const rocket = new Rocket(earth.radius, moon);
   earth.root.add(moon.root, moon.orbitLine, satellites.frame, rocket.group);
 
+  // --- Asteroiden: Gürtel (GPU) und einzelne Asteroiden ---
+  const belt = new AsteroidBelt(clock.days);
+  const asteroids = new FreeAsteroids(scale);
+  scene.add(belt.group, asteroids.group, asteroids.orbitGroup);
+
   const panel = new ControlPanel({
     clock,
     onToggleOrbits: (visible) => {
       planets.setOrbitsVisible(visible);
+      asteroids.setOrbitsVisible(visible);
       moon.orbitLine.visible = visible;
       satellites.setOrbitsVisible(visible);
       rocket.setPathVisible(visible);
@@ -57,7 +65,7 @@ async function init(): Promise<void> {
   });
 
   // --- Navigation: Fokusziele, Kameraflug, Picking, Liste, Infopanel ---
-  const targets = createFocusTargets(sun, planets, moon, satellites, rocket, scale);
+  const targets = createFocusTargets(sun, planets, moon, asteroids, satellites, rocket, scale);
   const nav = new CameraController(camera, controls);
   const infoPanel = new InfoPanel();
   const tooltip = new Tooltip();
@@ -87,6 +95,8 @@ async function init(): Promise<void> {
   // Erste Positionen setzen und Shader vorab kompilieren (kein Ruckeln im ersten Frame).
   planets.update(clock.days, 0);
   moon.update(clock.days);
+  belt.update(clock.days, 0);
+  asteroids.update(clock.days, 0, camera);
   satellites.update(0, camera);
   rocket.update(0);
   renderer.compile(scene, camera);
@@ -108,6 +118,8 @@ async function init(): Promise<void> {
     sun.update(spinDt);
     planets.update(clock.days, spinDt);
     moon.update(clock.days);
+    belt.update(clock.days, spinDt);
+    asteroids.update(clock.days, spinDt, camera);
     // Satelliten und Rakete laufen wie die Eigenrotation in sichtbar skalierter Echtzeit.
     satellites.update(spinDt, camera);
     rocket.update(spinDt);
