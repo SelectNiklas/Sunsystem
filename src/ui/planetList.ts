@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { FocusTarget } from '../navigation/focusTargets';
 
-/** Planetenliste links zum schnellen Anspringen. */
+/** Liste links zum schnellen Anspringen: Himmelskörper und Raumfahrzeuge. */
 export class PlanetList {
   private readonly items = new Map<string, HTMLButtonElement>();
 
@@ -14,22 +14,9 @@ export class PlanetList {
     root.id = 'planet-list';
     root.className = 'glass';
 
-    const title = document.createElement('h3');
-    title.textContent = 'Himmelskörper';
-    root.appendChild(title);
-
-    const list = document.createElement('ul');
-    for (const target of targets) {
-      const li = document.createElement('li');
-      const btn = document.createElement('button');
-      btn.innerHTML = `<span class="dot" style="background:#${new THREE.Color(target.color).getHexString()}"></span>`;
-      btn.append(target.name);
-      btn.addEventListener('click', () => onSelect(target));
-      li.appendChild(btn);
-      list.appendChild(li);
-      this.items.set(target.id, btn);
-    }
-    root.appendChild(list);
+    const isCraft = (t: FocusTarget) => t.kind === 'satellite' || t.kind === 'rocket';
+    this.addSection(root, 'Himmelskörper', targets.filter((t) => !isCraft(t)), onSelect);
+    this.addSection(root, 'Raumfahrt', targets.filter(isCraft), onSelect);
 
     const overview = document.createElement('button');
     overview.className = 'overview-btn';
@@ -48,5 +35,31 @@ export class PlanetList {
 
   setActive(id: string | null): void {
     for (const [key, btn] of this.items) btn.classList.toggle('active', key === id);
+  }
+
+  private addSection(
+    root: HTMLElement,
+    heading: string,
+    targets: readonly FocusTarget[],
+    onSelect: (target: FocusTarget) => void,
+  ): void {
+    const title = document.createElement('h3');
+    title.textContent = heading;
+    root.appendChild(title);
+
+    const list = document.createElement('ul');
+    for (const target of targets) {
+      const li = document.createElement('li');
+      // Der Mond wird unter der Erde eingerückt.
+      if (target.kind === 'moon') li.className = 'sub';
+      const btn = document.createElement('button');
+      btn.innerHTML = `<span class="dot" style="background:#${new THREE.Color(target.color).getHexString()}"></span>`;
+      btn.append(target.name);
+      btn.addEventListener('click', () => onSelect(target));
+      li.appendChild(btn);
+      list.appendChild(li);
+      this.items.set(target.id, btn);
+    }
+    root.appendChild(list);
   }
 }

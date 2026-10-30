@@ -6,7 +6,10 @@ import { loadTextures } from './core/textures';
 import { CameraController } from './navigation/cameraController';
 import { createFocusTargets } from './navigation/focusTargets';
 import { Picker } from './navigation/picker';
+import { Moon } from './moon/moon';
 import { PlanetSystem } from './planets/planets';
+import { Rocket } from './rocket/rocket';
+import { SatelliteSystem } from './satellites/satellites';
 import { Starfield } from './stars/stars';
 import { StatsBar } from './stats/statsBar';
 import { Sun } from './sun/sun';
@@ -36,17 +39,25 @@ async function init(): Promise<void> {
   const planets = new PlanetSystem(textures, scale);
   scene.add(planets.group, planets.orbitGroup);
 
+  // --- Erdsystem: Mond, Satelliten, Rakete hängen am (nur verschobenen) Erd-Root ---
+  const earth = planets.get('earth');
+  const moon = new Moon(textures, scale);
+  const satellites = new SatelliteSystem(earth, scale);
+  const rocket = new Rocket(earth.radius, moon);
+  earth.root.add(moon.root, moon.orbitLine, satellites.frame, rocket.group);
 
   const panel = new ControlPanel({
     clock,
-    onToggleOrbits: (visible) => planets.setOrbitsVisible(visible),
-    onToggleLabels: (visible) => {
-      ctx.labelRenderer.domElement.style.display = visible ? '' : 'none';
+    onToggleOrbits: (visible) => {
+      planets.setOrbitsVisible(visible);
+      moon.orbitLine.visible = visible;
+      satellites.setOrbitsVisible(visible);
+      rocket.setPathVisible(visible);
     },
   });
 
   // --- Navigation: Fokusziele, Kameraflug, Picking, Liste, Infopanel ---
-  const targets = createFocusTargets(sun, planets);
+  const targets = createFocusTargets(sun, planets, moon, satellites, rocket, scale);
   const nav = new CameraController(camera, controls);
   const infoPanel = new InfoPanel();
   const tooltip = new Tooltip();
@@ -58,7 +69,6 @@ async function init(): Promise<void> {
 
   nav.onFocusChange((target) => {
     planetList.setActive(target?.id ?? null);
-    for (const t of targets) t.label.element.classList.toggle('active', t === target);
     if (target) infoPanel.show(target);
     else infoPanel.hide();
   });
@@ -68,15 +78,15 @@ async function init(): Promise<void> {
     onClick: (target) => nav.focus(target),
   });
 
-  // Labels sind anklickbar – hilfreich für kleine, weit entfernte Körper.
-  for (const t of targets) t.label.element.addEventListener('click', () => nav.focus(t));
-
   const stats = new StatsBar(document.querySelector<HTMLElement>('#statusbar .stats')!, renderer, scene, camera);
 
   window.addEventListener('resize', () => starfield.setPixelRatio(renderer.getPixelRatio()));
 
   // Erste Positionen setzen und Shader vorab kompilieren (kein Ruckeln im ersten Frame).
   planets.update(clock.days, 0);
+  moon.update(clock.days);
+  satellites.update(0, camera);
+  rocket.update(0);
   renderer.compile(scene, camera);
   loading.setProgress(1, 'Fertig');
   loading.hide();
@@ -95,6 +105,10 @@ async function init(): Promise<void> {
     const spinDt = dt * clock.direction;
     sun.update(spinDt);
     planets.update(clock.days, spinDt);
+    moon.update(clock.days);
+    // Satelliten und Rakete laufen wie die Eigenrotation in sichtbar skalierter Echtzeit.
+    satellites.update(spinDt, camera);
+    rocket.update(spinDt);
 
     nav.update(dt);
     controls.update();

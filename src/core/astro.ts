@@ -48,6 +48,8 @@ export function solveKepler(M: number, e: number): number {
 /**
  * Kepler-Bahn mit vorberechneten Orientierungsvektoren P (→ Perihel) und
  * Q (90° weiter in Bahnrichtung), allokationsfrei im Render-Loop.
+ * Längen- und Zeiteinheit folgen den Elementen (AE/Tage für Planeten,
+ * km/Minuten für Satelliten); die Bezugsebene wird auf die XZ-Ebene abgebildet.
  */
 export class KeplerOrbit {
   readonly a: number;
@@ -64,17 +66,26 @@ export class KeplerOrbit {
     this.b = el.a * Math.sqrt(1 - el.e * el.e);
     this.M0 = el.M0 * DEG;
     this.n = TWO_PI / el.periodDays;
+    this.setOrientation(el.i, el.node, el.peri);
+  }
 
-    const cw = Math.cos(el.peri * DEG);
-    const sw = Math.sin(el.peri * DEG);
-    const cO = Math.cos(el.node * DEG);
-    const sO = Math.sin(el.node * DEG);
-    const ci = Math.cos(el.i * DEG);
-    const si = Math.sin(el.i * DEG);
+  /** Bahnlage neu setzen (Grad), z. B. für präzedierende Knoten. */
+  setOrientation(i: number, node: number, peri: number): void {
+    const cw = Math.cos(peri * DEG);
+    const sw = Math.sin(peri * DEG);
+    const cO = Math.cos(node * DEG);
+    const sO = Math.sin(node * DEG);
+    const ci = Math.cos(i * DEG);
+    const si = Math.sin(i * DEG);
 
     // Ekliptikal → Three.js (x, z, −y)
     this.P.set(cw * cO - sw * sO * ci, sw * si, -(cw * sO + sw * cO * ci));
     this.Q.set(-sw * cO - cw * sO * ci, cw * si, -(-sw * sO + cw * cO * ci));
+  }
+
+  /** Einheitsvektor der Bahnnormalen (Drehimpulsrichtung). */
+  normal(out: THREE.Vector3): THREE.Vector3 {
+    return out.crossVectors(this.P, this.Q);
   }
 
   /** Heliozentrische Position in AE zum Zeitpunkt d (Tage seit J2000). */

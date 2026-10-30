@@ -12,6 +12,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 const _goalPos = new THREE.Vector3();
 const _goalTarget = new THREE.Vector3();
 const _p = new THREE.Vector3();
+const _focusPos = new THREE.Vector3();
 const _fwd = new THREE.Vector3();
 const _right = new THREE.Vector3();
 const _move = new THREE.Vector3();
@@ -89,7 +90,8 @@ export class CameraController {
   /** Fliegt zu einem Körper und verfolgt ihn anschließend. */
   focus(target: FocusTarget): void {
     const f = this.flight;
-    const p = target.object.position;
+    // Weltposition: Mond und Raumfahrzeuge hängen am Bezugssystem der Erde.
+    const p = target.object.getWorldPosition(_focusPos);
 
     // Blickrichtung: Mischung aus aktueller Richtung und Sonnenseite, damit
     // der Körper beim Ankommen überwiegend beleuchtet ist, die Tag-Nacht-
@@ -144,7 +146,7 @@ export class CameraController {
 
     // Ziel live nachführen, da sich der Körper während des Flugs bewegt.
     if (this.focused) {
-      _goalTarget.copy(this.focused.object.position);
+      this.focused.object.getWorldPosition(_goalTarget);
       _goalPos.addVectors(_goalTarget, f.offset);
     } else {
       _goalTarget.copy(ORIGIN);
@@ -168,7 +170,7 @@ export class CameraController {
   }
 
   private updateFollow(): void {
-    const p = this.focused!.object.position;
+    const p = this.focused!.object.getWorldPosition(_focusPos);
     _move.subVectors(p, this.lastFocusPos);
     this.camera.position.add(_move);
     this.controls.target.add(_move);

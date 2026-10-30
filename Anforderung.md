@@ -14,7 +14,6 @@ Erstelle eine Webanwendung, die unser Sonnensystem in 3D darstellt und frei navi
 - Die **Abstände zur Sonne** werden separat komprimiert (z. B. logarithmisch). Die Reihenfolge der Bahnen bleibt erhalten, und die Planeten dürfen sich nicht überlappen.
 - Die Sonne bekommt einen eigenen, festen Skalierungsfaktor von ×0,14 (bezogen auf den echten Radius) und bleibt der größte Körper. Im UI ist die Sonnengröße nicht einstellbar.
 - Ein Umschalter auf einen realistischen Maßstab ist **nicht** erforderlich.
-- Namensbeschriftungen über allen Körpern (im UI ein- und ausblendbar) helfen beim Auffinden.
 - Das Hinauszoomen ist begrenzt, sodass das gesamte System gerade noch mit etwas Rand ins Bild passt.
 
 ## Planeten

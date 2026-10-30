@@ -5,7 +5,6 @@ import type { SimClock } from '../core/simClock';
 export interface ControlPanelOptions {
   clock: SimClock;
   onToggleOrbits(visible: boolean): void;
-  onToggleLabels(visible: boolean): void;
 }
 
 const SLIDER_STEPS = 1000;
@@ -48,7 +47,6 @@ export class ControlPanel {
       <section>
         <h3>Ansicht</h3>
         <label class="toggle"><input type="checkbox" class="orbits" checked /> Orbitlinien</label>
-        <label class="toggle"><input type="checkbox" class="labels" checked /> Beschriftungen</label>
       </section>
     `;
     document.body.appendChild(this.root);
@@ -79,9 +77,6 @@ export class ControlPanel {
 
     q<HTMLInputElement>('.orbits').addEventListener('change', (e) =>
       opts.onToggleOrbits((e.target as HTMLInputElement).checked),
-    );
-    q<HTMLInputElement>('.labels').addEventListener('change', (e) =>
-      opts.onToggleLabels((e.target as HTMLInputElement).checked),
     );
 
     window.addEventListener('keydown', (e) => {

@@ -1,9 +1,7 @@
 import * as THREE from 'three';
-import type { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { PLANET_RENDER, type PlanetData } from '../config/solarSystemData';
 import { initialRotation, KeplerOrbit, poleOrientation, visualRotationRate } from '../core/astro';
 import type { ScaleState } from '../core/scale';
-import { createLabel } from '../ui/labels';
 
 /** Gemeinsame Einheitskugeln für alle LOD-Stufen (eine Geometrie pro Stufe). */
 let sharedSpheres: THREE.SphereGeometry[] | null = null;
@@ -28,7 +26,6 @@ export class Planet {
   readonly orbit: KeplerOrbit;
   /** Heliozentrische Position in AE (Szenenachsen). */
   readonly helioAU = new THREE.Vector3();
-  readonly label: CSS2DObject;
   radius = 0;
   /** Sichtbare Drehrate in rad/s (vereinfacht). */
   private readonly spinRate: number;
@@ -52,9 +49,6 @@ export class Planet {
     this.spin.add(this.surface);
     this.tilt.add(this.spin);
     this.root.add(this.tilt);
-
-    this.label = createLabel(data.name);
-    this.root.add(this.label);
   }
 
   /** Kameraabstand für die Fokusansicht (Ringe brauchen mehr Platz). */
@@ -70,7 +64,6 @@ export class Planet {
     for (let i = 0; i < levels.length; i++) {
       levels[i].distance = this.radius * PLANET_RENDER.lodDistanceFactors[i];
     }
-    this.label.position.set(0, this.radius * 1.35, 0);
   }
 
   /**

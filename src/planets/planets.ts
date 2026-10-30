@@ -52,7 +52,7 @@ export class PlanetSystem {
     this.earthLayers.update(spinDt);
   }
 
-  /** Radien, LOD-Schwellen, Labels und Orbitlinien aus dem Maßstab setzen. */
+  /** Radien, LOD-Schwellen und Orbitlinien aus dem Maßstab setzen. */
   private applyScale(): void {
     for (let i = 0; i < this.planets.length; i++) {
       const planet = this.planets[i];

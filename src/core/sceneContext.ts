@@ -4,7 +4,6 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 import { CAMERA, RENDER } from '../config/solarSystemData';
 
 export interface SceneContext {
@@ -14,7 +13,6 @@ export interface SceneContext {
   controls: OrbitControls;
   composer: EffectComposer;
   bloomPass: UnrealBloomPass;
-  labelRenderer: CSS2DRenderer;
   render(): void;
 }
 
@@ -71,12 +69,6 @@ export function createSceneContext(container: HTMLElement): SceneContext {
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
 
-  // Labels als DOM-Overlay; Maus-Events gehen durch zum Canvas (CSS).
-  const labelRenderer = new CSS2DRenderer();
-  labelRenderer.setSize(width, height);
-  labelRenderer.domElement.id = 'labels';
-  container.appendChild(labelRenderer.domElement);
-
   window.addEventListener('resize', () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -87,7 +79,6 @@ export function createSceneContext(container: HTMLElement): SceneContext {
     renderer.setSize(w, h);
     composer.setPixelRatio(pr);
     composer.setSize(w, h);
-    labelRenderer.setSize(w, h);
   });
 
   return {
@@ -97,10 +88,6 @@ export function createSceneContext(container: HTMLElement): SceneContext {
     controls,
     composer,
     bloomPass,
-    labelRenderer,
-    render: () => {
-      composer.render();
-      if (labelRenderer.domElement.style.display !== 'none') labelRenderer.render(scene, camera);
-    },
+    render: () => composer.render(),
   };
 }

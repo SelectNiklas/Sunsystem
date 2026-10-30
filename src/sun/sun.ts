@@ -1,9 +1,7 @@
 import * as THREE from 'three';
 import { KM_PER_UNIT, SUN } from '../config/solarSystemData';
-import type { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { initialRotation, poleOrientation, visualRotationRate } from '../core/astro';
 import { createCanvasTexture, type TextureSet } from '../core/textures';
-import { createLabel } from '../ui/labels';
 
 /**
  * Die Sonne: emissive Kugel (Bloom), additives Korona-Sprite und die
@@ -14,7 +12,6 @@ export class Sun {
   readonly mesh: THREE.Mesh;
   readonly light: THREE.PointLight;
   private readonly corona: THREE.Sprite;
-  readonly label: CSS2DObject;
   private readonly spinRate = visualRotationRate(SUN.rotation);
   private readonly realRadiusUnits = SUN.radiusKm / KM_PER_UNIT;
   private radiusUnits = 0;
@@ -55,9 +52,6 @@ export class Sun {
     this.light.name = 'Sonnenlicht';
     this.group.add(this.light);
 
-    this.label = createLabel(SUN.name);
-    this.group.add(this.label);
-
     this.setScale(sunScale);
   }
 
@@ -70,7 +64,6 @@ export class Sun {
     this.radiusUnits = this.realRadiusUnits * sunScale;
     this.mesh.scale.setScalar(this.radiusUnits);
     this.corona.scale.setScalar(this.radiusUnits * SUN.coronaScale);
-    this.label.position.set(0, this.radiusUnits * 1.25, 0);
   }
 
   /** @param spinDt Echtzeit-Delta in s mit Vorzeichen der Zeitrichtung */

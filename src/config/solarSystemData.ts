@@ -50,6 +50,16 @@ export const SCALE = {
    * Reihenfolge erhalten; innere Planeten bekommen mehr Platz.
    */
   distance: { factor: 500, refAU: 0.3 },
+
+  /**
+   * Erdnaher Raum (Satelliten, Mond, Rakete), in Erdradien:
+   * r_szene = R_Erde,szene · (1 + factor · (r / R_Erde − 1)^exponent).
+   * Die Potenz hebt erdnahe Bahnen sichtbar über die Atmosphäre und holt den
+   * Mond so nah heran, dass er auch bei engster Venus- bzw. Marsbegegnung
+   * (Mittelpunktsabstand 115 bzw. 127 Einheiten) frei bleibt.
+   * Ergebnis: ISS ≈ 1,08 R, GPS ≈ 1,40 R, GEO ≈ 1,50 R, Mond ≈ 2,3 R.
+   */
+  earthSpace: { factor: 0.25, exponent: 0.4 },
 } as const;
 
 /**
@@ -291,6 +301,227 @@ export const PLANETS: readonly PlanetData[] = [
     moons: 16,
   },
 ];
+
+// ---------------------------------------------------------------------------
+// Erdmond
+// ---------------------------------------------------------------------------
+
+/**
+ * Mittlere Mondbahn (Meeus, „Astronomical Algorithms“, Kap. 47, ohne
+ * Störungsterme): Ekliptik des Datums, Knoten und Perigäum präzedieren
+ * linear. Genauigkeit einige Grad – Mondphase und Stellung stimmen grob.
+ */
+export const MOON = {
+  name: 'Mond',
+  radiusKm: 1737.4,
+  textureKey: 'moon',
+  fallback: { color: 0x9c9a96, color2: 0x5f5d5a },
+  orbitColor: 0xb8b8c0,
+  /**
+   * Der Mond wird nicht über die Planeten-Formel komprimiert, sondern im
+   * echten Größenverhältnis zur (dargestellten) Erde gezeigt: r = R_Erde · 0,273.
+   */
+  sizeRelativeToEarth: true,
+  orbit: {
+    aKm: 384_400,
+    e: 0.0549,
+    i: 5.145,
+    /** Länge des aufsteigenden Knotens Ω = node0 + nodeRate · d (Grad). */
+    node0: 125.0445,
+    nodeRate: -0.0529538,
+    /** Länge des Perigäums ϖ = peri0 + periRate · d (Grad), ω = ϖ − Ω. */
+    peri0: 83.3532,
+    periRate: 0.1114041,
+    /** Mittlere Anomalie M = M0 + 360° · d / anomalisticMonth. */
+    M0: 134.9634,
+    anomalisticMonthDays: 27.554_550,
+  },
+  info: {
+    siderealMonthDays: 27.321_661,
+    synodicMonthDays: 29.530_589,
+    /** Achsneigung gegen die eigene Bahnebene in Grad. */
+    axialTiltDeg: 6.68,
+  },
+} as const;
+
+// ---------------------------------------------------------------------------
+// Satelliten (Bahnelemente bezogen auf den Erdäquator J2000)
+// ---------------------------------------------------------------------------
+
+export type SatelliteModel = 'iss' | 'panels' | 'dish';
+
+export interface SatelliteData {
+  id: string;
+  name: string;
+  /** Bahntyp für die Infoanzeige. */
+  orbitType: string;
+  model: SatelliteModel;
+  color: number;
+  /** Große Halbachse in km. */
+  aKm: number;
+  e: number;
+  /** Inklination gegen den Erdäquator in Grad. */
+  i: number;
+  /** Länge des aufsteigenden Knotens in der Äquatorebene in Grad (Bezug: lokale X-Achse des Erdrahmens). */
+  node: number;
+  /** Argument des Perigäums in Grad. */
+  peri: number;
+  /** Mittlere Anomalie zum Start in Grad. */
+  M0: number;
+  /** Umlaufzeit in Minuten (echte Werte, relativ zueinander korrekt). */
+  periodMin: number;
+  /**
+   * Sonnensynchron: Der Knoten folgt der Sonne, sodass die Bahnebene einen
+   * festen Winkel zur Sonnenrichtung behält (Ortszeit des aufsteigenden
+   * Knotens in Stunden). Ersetzt `node`.
+   */
+  ltanHours?: number;
+}
+
+export const SATELLITES = {
+  /**
+   * Sichtbare Bahngeschwindigkeit: simulierte Minuten pro Echtzeit-Sekunde,
+   * unabhängig vom Geschwindigkeitsregler (wie die Eigenrotation).
+   * ISS ≈ 9 s pro Umlauf, GEO ≈ 2,4 min.
+   */
+  minutesPerSecond: 10,
+  /** Größe der Modelle in Szeneneinheiten (Spannweite) aus der Nähe. */
+  modelSize: 0.7,
+  /**
+   * Aus größerer Entfernung wachsen die Modelle mit, damit sie in der
+   * Erdansicht erkennbar bleiben: Spannweite = Kameraabstand · apparentSize,
+   * begrenzt auf [modelSize, maxSize].
+   */
+  apparentSize: 0.03,
+  maxSize: 4,
+  /** Radius der unsichtbaren Klickfläche, bezogen auf modelSize = 1. */
+  pickRadius: 1.7,
+  orbitSegments: 256,
+  orbitOpacity: 0.5,
+  list: [
+    {
+      id: 'iss',
+      name: 'ISS',
+      orbitType: 'LEO, bemannt',
+      model: 'iss',
+      color: 0xf2f2f2,
+      aKm: 6_788,
+      e: 0.0005,
+      i: 51.64,
+      node: 40,
+      peri: 0,
+      M0: 0,
+      periodMin: 92.9,
+    },
+    {
+      id: 'hubble',
+      name: 'Hubble',
+      orbitType: 'LEO, Weltraumteleskop',
+      model: 'panels',
+      color: 0xcfd3d8,
+      aKm: 6_901,
+      e: 0.0002,
+      i: 28.47,
+      node: 210,
+      peri: 0,
+      M0: 120,
+      periodMin: 95.1,
+    },
+    {
+      id: 'sentinel',
+      name: 'Sentinel-2',
+      orbitType: 'Sonnensynchron (polar)',
+      model: 'panels',
+      color: 0xd9b45a,
+      aKm: 7_164,
+      e: 0.0001,
+      i: 98.57,
+      node: 0,
+      peri: 0,
+      M0: 240,
+      periodMin: 100.6,
+      ltanHours: 22.5,
+    },
+    {
+      id: 'gps',
+      name: 'GPS',
+      orbitType: 'MEO, Navigation',
+      model: 'panels',
+      color: 0xe0c070,
+      aKm: 26_560,
+      e: 0.01,
+      i: 55,
+      node: 120,
+      peri: 0,
+      M0: 60,
+      periodMin: 717.97,
+    },
+    {
+      id: 'geo',
+      name: 'Meteosat',
+      orbitType: 'Geostationär (GEO)',
+      model: 'dish',
+      color: 0xd8dde4,
+      aKm: 42_164,
+      e: 0,
+      i: 0,
+      node: 0,
+      peri: 0,
+      M0: 300,
+      periodMin: 1436.07,
+    },
+    {
+      id: 'molniya',
+      name: 'Molniya',
+      orbitType: 'Molniya (stark elliptisch)',
+      model: 'dish',
+      color: 0xc9a46a,
+      aKm: 26_554,
+      e: 0.72,
+      i: 63.4,
+      node: 300,
+      /** 270° → Apogäum über der Nordhalbkugel. */
+      peri: 270,
+      M0: 180,
+      periodMin: 717.7,
+    },
+  ] satisfies readonly SatelliteData[],
+} as const;
+
+// ---------------------------------------------------------------------------
+// Rakete Erde → Mond
+// ---------------------------------------------------------------------------
+
+export const ROCKET = {
+  name: 'Rakete',
+  /** Länge des Modells in Szeneneinheiten. */
+  length: 1.3,
+  /** Dauer des Transfers in Echtzeit-Sekunden. */
+  flightSeconds: 32,
+  /** Verweildauer im Mondorbit, danach startet die Mission neu. */
+  lunarOrbitSeconds: 14,
+  /** Anteil des Flugs mit Beschleunigung (Start + Einschuss); danach Freiflug. */
+  burnFraction: 0.14,
+  /** Radius des Mondorbits als Vielfaches des (dargestellten) Mondradius. */
+  lunarOrbitFactor: 1.6,
+  /** Punkte der Flugbahn-Linie. */
+  pathSegments: 120,
+  pathColor: 0xff9a4a,
+  pathOpacity: 0.35,
+  flownOpacity: 0.9,
+  exhaust: {
+    count: 420,
+    /** Lebensdauer der Partikel in Sekunden. */
+    life: 0.9,
+    /** Partikel pro Sekunde bei vollem Schub. */
+    rate: 460,
+    /** Austrittsgeschwindigkeit in Szeneneinheiten pro Sekunde. */
+    speed: 2.6,
+    spread: 0.55,
+    size: 0.38,
+  },
+  viewDistance: 9,
+} as const;
 
 export const PLANET_RENDER = {
   /** LOD-Stufen: [Breiten-, Höhensegmente] der Kugel. */
