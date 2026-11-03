@@ -771,6 +771,32 @@ export const RENDER = {
   },
 } as const;
 
+/**
+ * Mobilgeräte (Touch ohne Maus, siehe core/device.ts): geringere Grafiklast,
+ * Ziel ≥ 30 FPS auf Mittelklasse-Smartphones. Überschreibt die Werte aus RENDER.
+ */
+export const MOBILE = {
+  maxPixelRatio: 1.5,
+  msaaSamples: 0,
+  bloom: {
+    strength: 0.8,
+    /** Auflösung der Bloom-Mipkette relativ zur Bildauflösung. */
+    resolution: 0.5,
+  },
+  /** Texturen werden beim Laden auf diese Kantenlänge verkleinert. */
+  maxTextureSize: 1024,
+  anisotropy: 2,
+  starCount: 4500,
+  beltCount: 2500,
+  adaptive: { targetFps: 45, minPixelRatio: 0.75 },
+} as const;
+
+/**
+ * Kompakte Oberfläche (Panels einklappbar, Infopanel als Leiste unten).
+ * Muss mit den Media Queries in style.css übereinstimmen.
+ */
+export const COMPACT_UI_QUERY = '(max-width: 700px), (max-height: 500px)';
+
 export const CAMERA = {
   fov: 50,
   near: 0.01,
@@ -780,6 +806,12 @@ export const CAMERA = {
   minDistance: 0.05,
   /** Begrenzt das Hinauszoomen: knapp mehr als nötig für das ganze System. */
   maxDistance: 5000,
+  /**
+   * Seitenverhältnis, für das Gesamtansicht und maxDistance ausgelegt sind.
+   * Bei schmaleren Fenstern (Hochformat) rückt die Kamera entsprechend weiter weg,
+   * damit das ganze System in die Breite passt.
+   */
+  overviewAspect: 1.6,
 } as const;
 
 export const NAVIGATION = {
@@ -798,6 +830,10 @@ export const NAVIGATION = {
   sunViewFactor: 3.5,
   /** Klick statt Ziehen: maximale Mausbewegung in Pixeln. */
   clickTolerancePx: 5,
+  /** Tippen statt Wischen: maximale Fingerbewegung in Pixeln. */
+  tapTolerancePx: 12,
+  /** Tippen neben einen kleinen Körper trifft ihn noch bis zu diesem Abstand (Bildschirmpixel). */
+  tapRadiusPx: 28,
 } as const;
 
 // ---------------------------------------------------------------------------

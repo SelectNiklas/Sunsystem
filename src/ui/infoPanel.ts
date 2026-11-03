@@ -1,8 +1,12 @@
+import { isCompactUI } from '../core/device';
 import type { FocusTarget } from '../navigation/focusTargets';
 
 const REFRESH_MS = 250;
 
-/** Infopanel mit Kerndaten des ausgewählten Objekts. */
+/**
+ * Infopanel mit Kerndaten des ausgewählten Objekts. Auf kleinen Bildschirmen
+ * erscheint es als Leiste vom unteren Rand (Layout in style.css).
+ */
 export class InfoPanel {
   private readonly root = document.createElement('aside');
   private readonly title = document.createElement('h2');
@@ -10,6 +14,9 @@ export class InfoPanel {
   /** Laufend aktualisierte Werte (z. B. aktueller Abstand). */
   private live: { el: HTMLElement; value: () => string }[] = [];
   private lastRefresh = 0;
+  private visible = false;
+  /** Gemessene Höhe inkl. Abstand zum unteren Rand (ResizeObserver, kein Layout im Render-Loop). */
+  private coveredHeight = 0;
 
   constructor() {
     this.root.id = 'info-panel';
@@ -23,6 +30,16 @@ export class InfoPanel {
 
     this.root.append(close, this.title, this.rows);
     document.body.appendChild(this.root);
+
+    // offsetHeight statt getBoundingClientRect: unabhängig von der Einblend-Transformation.
+    new ResizeObserver(() => {
+      this.coveredHeight = this.root.offsetHeight + (parseFloat(getComputedStyle(this.root).bottom) || 0);
+    }).observe(this.root);
+  }
+
+  /** Unten verdeckter Bildschirmbereich in Pixeln (nur bei der Leiste auf kleinen Bildschirmen). */
+  get bottomInset(): number {
+    return this.visible && isCompactUI() ? this.coveredHeight : 0;
   }
 
   show(target: FocusTarget): void {
@@ -40,11 +57,13 @@ export class InfoPanel {
     }
 
     this.refreshLive();
+    this.visible = true;
     this.root.classList.add('visible');
   }
 
   hide(): void {
     this.live = [];
+    this.visible = false;
     this.root.classList.remove('visible');
   }
 

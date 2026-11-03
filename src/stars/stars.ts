@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { STARFIELD } from '../config/solarSystemData';
+import { GRAPHICS } from '../core/device';
 import { createCanvasTexture, type TextureSet } from '../core/textures';
 
 /**
@@ -53,7 +54,8 @@ export class Starfield {
   }
 
   private createPoints(): THREE.Points {
-    const { count, radius, pointSize, temperatureK } = STARFIELD;
+    const { radius, pointSize, temperatureK } = STARFIELD;
+    const count = GRAPHICS.starCount;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const sizes = new Float32Array(count);

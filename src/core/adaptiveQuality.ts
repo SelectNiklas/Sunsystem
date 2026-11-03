@@ -1,7 +1,7 @@
-import { RENDER } from '../config/solarSystemData';
+import { GRAPHICS } from './device';
 import type { SceneContext } from './sceneContext';
 
-const A = RENDER.adaptive;
+const A = GRAPHICS.adaptive;
 
 interface Level {
   pixelRatio: number;

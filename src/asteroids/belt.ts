@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ASTEROID_BELT, SCALE } from '../config/solarSystemData';
 import { KeplerOrbit } from '../core/astro';
+import { GRAPHICS } from '../core/device';
 import { createRockGeometry, seededRandom } from './rock';
 
 const DEG = Math.PI / 180;
@@ -57,10 +58,11 @@ export class AsteroidBelt {
 
     const random = seededRandom(ASTEROID_BELT.seed);
     const material = this.createMaterial();
-    const perShape = Math.ceil(ASTEROID_BELT.count / ASTEROID_BELT.shapes);
+    const total = GRAPHICS.beltCount;
+    const perShape = Math.ceil(total / ASTEROID_BELT.shapes);
 
     for (let s = 0; s < ASTEROID_BELT.shapes; s++) {
-      const count = Math.min(perShape, ASTEROID_BELT.count - s * perShape);
+      const count = Math.min(perShape, total - s * perShape);
       const geometry = createRockGeometry(ASTEROID_BELT.seed + s * 101, ASTEROID_BELT.detail, 1.15 + s * 0.35);
       this.fillInstanceAttributes(geometry, count, random);
 

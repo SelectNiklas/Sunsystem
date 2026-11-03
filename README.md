@@ -2,7 +2,7 @@
 
 Interaktives 3D-Sonnensystem mit Vite, TypeScript und Three.js.
 
-> Stand: **Etappe 5** (Asteroidengürtel, einzelne Asteroiden, Feinschliff)
+> Stand: **Etappe 6** (Anpassung für Mobilgeräte)
 
 ## Bedienung
 
@@ -20,7 +20,21 @@ Interaktives 3D-Sonnensystem mit Vite, TypeScript und Three.js.
 | Shift (beim Fliegen)          | Schneller                                       |
 | ESC                           | Zurück zur Gesamtansicht                        |
 | Leertaste                     | Pause / Weiter                                  |
-| Panel oben rechts             | Zeit, Geschwindigkeit, Orbitlinien              |
+| Panel oben rechts             | Zeit, Geschwindigkeit, Orbitlinien (⚙ klappt ein/aus) |
+
+### Smartphone / Tablet
+
+| Geste                         | Wirkung                                         |
+| ----------------------------- | ----------------------------------------------- |
+| 1 Finger ziehen               | Drehen                                          |
+| 2 Finger (zusammen/auseinander, ziehen) | Zoomen und Verschieben                |
+| Tippen auf Körper             | Kamera fliegt hin und folgt ihm, Infoleiste unten (kleine Körper zählen auch, wenn man knapp daneben tippt) |
+| Erneutes Tippen auf den Körper | Zurück zur Gesamtansicht                       |
+| „Raumfahrt“                   | Klappt eine waagerecht scrollbare Leiste mit Satelliten und Rakete auf |
+| „Gesamtansicht“               | Ersetzt ESC                                     |
+| ⚙ oben rechts                 | Steuerung (Zeit, Geschwindigkeit, Orbitlinien)  |
+
+Freies Fliegen (WASD) gibt es auf Touch-Geräten nicht; Drehen, Zoomen und Verschieben decken die Navigation ab.
 
 ## Maßstab
 
@@ -78,6 +92,37 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
   Bringt ein Schritt keine Verbesserung (z. B. weil der Akkubetrieb die Bildrate begrenzt), wird er
   zurückgenommen. Die aktuelle Stufe steht in der Statusleiste unter „Auflösung“.
 
+## Mobilgeräte
+
+- **Kompakte Oberfläche** bei schmalen (≤ 700 px) oder niedrigen (≤ 500 px) Fenstern (`COMPACT_UI_QUERY`):
+  Steuerung und Raumfahrtliste starten eingeklappt; es ist immer höchstens eines aufgeklappt.
+  Das Infopanel erscheint als Leiste vom unteren Rand, lange Werte brechen um statt abgeschnitten zu werden.
+  Der Bildausschnitt rückt dabei weich nach oben, damit der verfolgte Körper nicht unter der Leiste liegt.
+  Alle Touch-Ziele sind mindestens 40 px groß; Notch und Home-Indikator werden freigehalten.
+- Die Statusleiste zeigt auf kleinen Bildschirmen nur FPS, Frame-Time und Draw Calls; die Texturquelle steht dann im Steuerungspanel.
+- **Seitenverhältnis:** Im Hochformat ist der horizontale Bildwinkel der engere. Der Fokusabstand wächst
+  deshalb mit `1 / Seitenverhältnis`, Gesamtansicht und Zoomgrenze rücken so weit weg, dass das ganze System in die Breite passt
+  (`CAMERA.overviewAspect`).
+- **Weniger Grafiklast** (`MOBILE` in `solarSystemData.ts`): Als Mobilgerät gilt ein Gerät mit Touch und ohne Maus.
+  Pixel-Ratio höchstens 1,5, kein MSAA, schwächerer Bloom mit halber Auflösung, Texturen auf 1024 px verkleinert,
+  halb so viele Sterne und Gürtel-Asteroiden, Panels ohne Weichzeichner. Die automatische Qualitätsanpassung zielt auf 45 FPS
+  und darf bis Pixel-Ratio 0,75 heruntergehen.
+- Zum Testen am Desktop: `?mobile=1` erzwingt die Mobil-Einstellungen, `?mobile=0` schaltet sie ab
+  (das Layout richtet sich nach der Fenstergröße, z. B. Geräteemulation in den DevTools).
+
+### Auf dem Handy öffnen (lokales Netz)
+
+1. Rechner und Handy im selben WLAN.
+2. Entwicklungsserver im Netz freigeben:
+   ```bash
+   npm run dev -- --host
+   ```
+3. Vite zeigt neben `Local` auch eine `Network`-Adresse, z. B. `http://192.168.178.23:5173/`. Diese im Handy-Browser öffnen.
+4. Klappt es nicht, blockiert meist die Firewall: Unter Windows beim ersten Start den Zugriff für Node.js
+   im **privaten** Netzwerk erlauben (oder Port 5173 freigeben).
+
+Der Produktions-Build lässt sich genauso testen: `npm run build` und `npm run preview -- --host` (Port 4173).
+
 ## Voraussetzungen
 
 - [Node.js](https://nodejs.org/) ≥ 20.19 (LTS empfohlen)
@@ -127,6 +172,7 @@ src/
   core/astro.ts               Kepler-Löser, Bahnorientierung, IAU-Rotation, Datum
   core/scale.ts               Darstellungsmaßstab (Radien, Abstände, Sonnengröße)
   core/simClock.ts            Simulationsuhr
+  core/device.ts              Mobilgerät-Erkennung, Grafikeinstellungen je Gerät, kompakte Oberfläche
   sun/sun.ts                  Sonne (emissiv, Korona, PointLight)
   planets/                    Planeten, Erde (Tag/Nacht, Wolken, Atmosphäre), Ringe, Orbitlinien
   moon/moon.ts                Erdmond (Bahn, gebundene Rotation, Orbitlinie)
@@ -136,6 +182,7 @@ src/
   navigation/                 Fokusziele, Kameraflug/Verfolgen/freies Fliegen, Picking
   ui/controlPanel.ts          Steuerungspanel (Zeit, Ansicht)
   ui/planetList.ts            Objektliste (Raumfahrt)
+  ui/collapsible.ts           Ein-/Ausklappen der Panels
   ui/infoPanel.ts             Infopanel mit Kerndaten
   ui/tooltip.ts               Name beim Überfahren mit der Maus
   stars/stars.ts              Milchstraßen-Skysphere + Points-Sternfeld

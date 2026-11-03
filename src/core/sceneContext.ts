@@ -5,6 +5,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { CAMERA, RENDER } from '../config/solarSystemData';
+import { GRAPHICS } from './device';
 
 export interface SceneContext {
   renderer: THREE.WebGLRenderer;
@@ -24,8 +25,8 @@ export interface SceneContext {
 export function createSceneContext(container: HTMLElement): SceneContext {
   const width = window.innerWidth;
   const height = window.innerHeight;
-  const pixelRatio = Math.min(window.devicePixelRatio, RENDER.maxPixelRatio);
-  const samples = pixelRatio > RENDER.msaaMaxPixelRatio ? 0 : RENDER.msaaSamples;
+  const pixelRatio = Math.min(window.devicePixelRatio, GRAPHICS.maxPixelRatio);
+  const samples = pixelRatio > RENDER.msaaMaxPixelRatio ? 0 : GRAPHICS.msaaSamples;
   // Obergrenze aus der automatischen Qualitätsanpassung.
   let pixelRatioCap = Infinity;
 
@@ -69,19 +70,24 @@ export function createSceneContext(container: HTMLElement): SceneContext {
   composer.addPass(new RenderPass(scene, camera));
   const bloomPass = new UnrealBloomPass(
     new THREE.Vector2(width, height),
-    RENDER.bloom.strength,
+    GRAPHICS.bloomStrength,
     RENDER.bloom.radius,
     RENDER.bloom.threshold,
   );
+  if (GRAPHICS.bloomResolution < 1) {
+    // Kleinere Mipkette (Mobilgeräte): Der Bloom wird beim Zusammensetzen hochskaliert.
+    const setBloomSize = bloomPass.setSize.bind(bloomPass);
+    bloomPass.setSize = (w, h) => setBloomSize(w * GRAPHICS.bloomResolution, h * GRAPHICS.bloomResolution);
+  }
   composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
 
-  const quality = { pixelRatio, samples };
+  const quality: { pixelRatio: number; samples: number } = { pixelRatio, samples };
 
   const applySize = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const pr = Math.min(window.devicePixelRatio, RENDER.maxPixelRatio, pixelRatioCap);
+    const pr = Math.min(window.devicePixelRatio, GRAPHICS.maxPixelRatio, pixelRatioCap);
     quality.pixelRatio = pr;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();

@@ -37,6 +37,7 @@ const MOVE_KEYS: Record<string, [forward: number, right: number, up: number]> = 
  * - Pfeiltasten/WASD (+ Q/E): freies Fliegen, beendet das Verfolgen
  * Beim Verfolgen wird die Bewegung des Körpers auf Kamera und Ziel addiert,
  * Drehen/Zoomen per Maus funktioniert dabei weiter.
+ * Abstände passen sich dem Seitenverhältnis an (Hochformat → weiter weg).
  */
 export class CameraController {
   private mode: Mode = 'free';
@@ -45,6 +46,9 @@ export class CameraController {
   private readonly keys = new Set<string>();
   private boost = false;
   private readonly listeners: ((target: FocusTarget | null) => void)[] = [];
+  /** Verschiebung des Bildausschnitts nach oben in Pixeln (Platz für die Infoleiste). */
+  private viewShift = 0;
+  private viewShiftGoal = 0;
 
   private readonly flight = {
     t: 0,
@@ -60,6 +64,13 @@ export class CameraController {
     private readonly camera: THREE.PerspectiveCamera,
     private readonly controls: OrbitControls,
   ) {
+    this.applyAspect();
+    // Startansicht: Gesamtansicht passend zum Seitenverhältnis
+    this.overviewPosition(camera.position);
+    window.addEventListener('resize', () => {
+      this.applyAspect();
+      this.applyViewShift();
+    });
     window.addEventListener('keydown', (e) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.code === 'Escape') {
@@ -98,7 +109,7 @@ export class CameraController {
     // Grenze aber sichtbar bleibt.
     f.offset.subVectors(this.camera.position, p).normalize();
     if (p.lengthSq() > 0) f.offset.multiplyScalar(0.6).addScaledVector(_p.copy(p).normalize(), -0.4);
-    f.offset.addScaledVector(UP, 0.25).normalize().multiplyScalar(target.viewDistance());
+    f.offset.addScaledVector(UP, 0.25).normalize().multiplyScalar(target.viewDistance() * this.portraitFactor());
 
     this.startFlight(this.camera.position.distanceTo(_p.addVectors(p, f.offset)));
     this.controls.minDistance = CAMERA.minDistance;
@@ -107,12 +118,21 @@ export class CameraController {
 
   /** Fliegt zurück zur Gesamtansicht. */
   overview(): void {
-    this.startFlight(this.camera.position.distanceTo(OVERVIEW_POSITION));
+    this.startFlight(this.camera.position.distanceTo(this.overviewPosition(_p)));
     this.controls.minDistance = CAMERA.minDistance;
     this.setFocused(null);
   }
 
+  /**
+   * Unten verdeckter Bereich in Pixeln (z. B. Infoleiste auf dem Handy).
+   * Die Bildmitte wandert weich in die Mitte des freien Bereichs.
+   */
+  setBottomInset(px: number): void {
+    this.viewShiftGoal = px / 2;
+  }
+
   update(dt: number): void {
+    this.updateViewShift(dt);
     switch (this.mode) {
       case 'flying':
         this.updateFlight(dt);
@@ -125,6 +145,44 @@ export class CameraController {
         this.updateFreeFly(dt);
         break;
     }
+  }
+
+  /**
+   * Faktor für Fokusabstände: Im Hochformat ist der horizontale Bildwinkel
+   * der engere, der Körper soll trotzdem vollständig ins Bild passen.
+   */
+  private portraitFactor(): number {
+    return 1 / Math.min(1, this.camera.aspect);
+  }
+
+  /** Gesamtansicht und Zoomgrenze passen in die Breite, auch bei schmalen Fenstern. */
+  private overviewFactor(): number {
+    return Math.max(1, CAMERA.overviewAspect / this.camera.aspect);
+  }
+
+  private overviewPosition(out: THREE.Vector3): THREE.Vector3 {
+    return out.copy(OVERVIEW_POSITION).multiplyScalar(this.overviewFactor());
+  }
+
+  private applyAspect(): void {
+    this.controls.maxDistance = CAMERA.maxDistance * this.overviewFactor();
+  }
+
+  private updateViewShift(dt: number): void {
+    if (this.viewShift === this.viewShiftGoal) return;
+    const diff = this.viewShiftGoal - this.viewShift;
+    this.viewShift = Math.abs(diff) < 0.5 ? this.viewShiftGoal : this.viewShift + diff * Math.min(1, dt * 6);
+    this.applyViewShift();
+  }
+
+  private applyViewShift(): void {
+    if (this.viewShift === 0) {
+      this.camera.clearViewOffset();
+      return;
+    }
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    this.camera.setViewOffset(w, h, 0, this.viewShift, w, h);
   }
 
   private startFlight(distance: number): void {
@@ -150,7 +208,7 @@ export class CameraController {
       _goalPos.addVectors(_goalTarget, f.offset);
     } else {
       _goalTarget.copy(ORIGIN);
-      _goalPos.copy(OVERVIEW_POSITION);
+      this.overviewPosition(_goalPos);
     }
 
     this.camera.position.lerpVectors(f.fromPos, _goalPos, e);

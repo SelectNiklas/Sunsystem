@@ -1,8 +1,14 @@
 import * as THREE from 'three';
+import { IS_MOBILE, isCompactUI } from '../core/device';
 import type { FocusTarget } from '../navigation/focusTargets';
+import { Collapsible } from './collapsible';
 
-/** Liste links zum schnellen Anspringen der Raumfahrzeuge. */
+/**
+ * Liste links zum schnellen Anspringen der Raumfahrzeuge (einklappbar).
+ * Auf kleinen Bildschirmen eine waagerecht scrollbare Leiste oben.
+ */
 export class PlanetList {
+  readonly collapsible: Collapsible;
   private readonly items = new Map<string, HTMLButtonElement>();
 
   constructor(
@@ -14,9 +20,16 @@ export class PlanetList {
     root.id = 'planet-list';
     root.className = 'glass';
 
+    // Die Überschrift ist zugleich der Knopf zum Ein-/Ausklappen.
+    const toggle = document.createElement('button');
+    toggle.className = 'panel-toggle list-toggle';
+    toggle.title = 'Liste ein-/ausklappen';
+    toggle.innerHTML = 'Raumfahrt <span class="chevron" aria-hidden="true">▾&#xFE0E;</span>';
+    root.appendChild(toggle);
+
     // Himmelskörper werden direkt in der Szene angeklickt; die Liste zeigt nur die Raumfahrt.
     const isCraft = (t: FocusTarget) => t.kind === 'satellite' || t.kind === 'rocket';
-    this.addSection(root, 'Raumfahrt', targets.filter(isCraft), onSelect);
+    root.appendChild(this.createList(targets.filter(isCraft), onSelect));
 
     const overview = document.createElement('button');
     overview.className = 'overview-btn';
@@ -27,26 +40,20 @@ export class PlanetList {
 
     const hint = document.createElement('div');
     hint.className = 'hint';
-    hint.innerHTML = 'WASD / Pfeile: fliegen<br>Q / E: runter / hoch · Shift: schneller<br>ESC: Gesamtansicht';
+    hint.innerHTML = IS_MOBILE
+      ? '1 Finger: drehen<br>2 Finger: zoomen / verschieben<br>Tippen: Objekt verfolgen'
+      : 'WASD / Pfeile: fliegen<br>Q / E: runter / hoch · Shift: schneller<br>ESC: Gesamtansicht';
     root.appendChild(hint);
 
     document.body.appendChild(root);
+    this.collapsible = new Collapsible(root, toggle, isCompactUI());
   }
 
   setActive(id: string | null): void {
     for (const [key, btn] of this.items) btn.classList.toggle('active', key === id);
   }
 
-  private addSection(
-    root: HTMLElement,
-    heading: string,
-    targets: readonly FocusTarget[],
-    onSelect: (target: FocusTarget) => void,
-  ): void {
-    const title = document.createElement('h3');
-    title.textContent = heading;
-    root.appendChild(title);
-
+  private createList(targets: readonly FocusTarget[], onSelect: (target: FocusTarget) => void): HTMLUListElement {
     const list = document.createElement('ul');
     for (const target of targets) {
       const li = document.createElement('li');
@@ -58,6 +65,6 @@ export class PlanetList {
       list.appendChild(li);
       this.items.set(target.id, btn);
     }
-    root.appendChild(list);
+    return list;
   }
 }

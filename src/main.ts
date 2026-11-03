@@ -2,6 +2,7 @@ import './style.css';
 import { AsteroidBelt } from './asteroids/belt';
 import { FreeAsteroids } from './asteroids/freeAsteroids';
 import { AdaptiveQuality } from './core/adaptiveQuality';
+import { isCompactUI, onCompactUIChange } from './core/device';
 import { createSceneContext } from './core/sceneContext';
 import { ScaleState } from './core/scale';
 import { SimClock } from './core/simClock';
@@ -74,6 +75,18 @@ async function init(): Promise<void> {
   const toggleFocus = (t: FocusTarget) => (nav.target === t ? nav.overview() : nav.focus(t));
   const planetList = new PlanetList(targets, toggleFocus, () => nav.overview());
 
+  // Kleine Bildschirme: Steuerung und Raumfahrtliste teilen sich den oberen Rand,
+  // es ist immer höchstens eines aufgeklappt.
+  const panels = [panel.collapsible, planetList.collapsible];
+  for (const p of panels) {
+    p.onToggle((collapsed) => {
+      if (!collapsed && isCompactUI()) for (const other of panels) if (other !== p) other.setCollapsed(true);
+    });
+  }
+  onCompactUIChange((compact) => {
+    for (const p of panels) p.setCollapsed(compact);
+  });
+
   let highlighted: FocusTarget | null = null;
   nav.onFocusChange((target) => {
     highlighted?.setHighlighted?.(false);
@@ -82,6 +95,8 @@ async function init(): Promise<void> {
     planetList.setActive(target?.id ?? null);
     if (target) infoPanel.show(target);
     else infoPanel.hide();
+    // Kleine Bildschirme: Die Steuerung macht der Infoleiste Platz.
+    if (target && isCompactUI()) panel.collapsible.setCollapsed(true);
   });
 
   const picker = new Picker(renderer.domElement, camera, targets, {
@@ -129,6 +144,7 @@ async function init(): Promise<void> {
     satellites.update(spinDt, camera);
     rocket.update(spinDt);
 
+    nav.setBottomInset(infoPanel.bottomInset);
     nav.update(dt);
     controls.update();
     starfield.update(camera);

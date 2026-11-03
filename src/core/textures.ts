@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { TEXTURES, type TextureKey, type TextureSpec } from '../config/solarSystemData';
+import { GRAPHICS } from './device';
 
 export type TextureSet = ReadonlyMap<TextureKey, THREE.Texture>;
 
@@ -13,7 +14,7 @@ export async function loadTextures(
   onProgress: (fraction: number, label: string) => void,
 ): Promise<TextureSet> {
   const loader = new THREE.TextureLoader();
-  const anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  const anisotropy = Math.min(GRAPHICS.anisotropy, renderer.capabilities.getMaxAnisotropy());
   const entries = Object.entries(TEXTURES) as [TextureKey, TextureSpec][];
   const result = new Map<TextureKey, THREE.Texture>();
   const missing: string[] = [];
@@ -28,6 +29,7 @@ export async function loadTextures(
           const tex = await loader.loadAsync(`${import.meta.env.BASE_URL}textures/${file}`);
           tex.colorSpace = spec.srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
           tex.anisotropy = anisotropy;
+          downscale(tex, GRAPHICS.maxTextureSize);
           result.set(key, tex);
           break;
         } catch {
@@ -47,6 +49,19 @@ export async function loadTextures(
     );
   }
   return result;
+}
+
+/** Verkleinert das Bild einer Textur, falls eine Kante `maxSize` überschreitet (spart GPU-Speicher). */
+function downscale(tex: THREE.Texture, maxSize: number): void {
+  const image = tex.image as HTMLImageElement;
+  const factor = maxSize / Math.max(image.width, image.height);
+  if (!(factor < 1)) return;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.width * factor);
+  canvas.height = Math.round(image.height * factor);
+  canvas.getContext('2d')!.drawImage(image, 0, 0, canvas.width, canvas.height);
+  tex.image = canvas;
+  tex.needsUpdate = true;
 }
 
 /** Erzeugt eine CanvasTexture; `draw` zeichnet in den 2D-Kontext. */

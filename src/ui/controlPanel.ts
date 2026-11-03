@@ -1,6 +1,8 @@
 import { TIME } from '../config/solarSystemData';
 import { j2000DaysToDate } from '../core/astro';
+import { isCompactUI } from '../core/device';
 import type { SimClock } from '../core/simClock';
+import { Collapsible } from './collapsible';
 
 export interface ControlPanelOptions {
   clock: SimClock;
@@ -18,8 +20,9 @@ const dateFormat = new Intl.DateTimeFormat('de-DE', {
   minute: '2-digit',
 });
 
-/** Glassmorphism-Panel oben rechts: Zeitsteuerung und Ansicht. */
+/** Glassmorphism-Panel oben rechts: Zeitsteuerung und Ansicht (einklappbar). */
 export class ControlPanel {
+  readonly collapsible: Collapsible;
   private readonly root: HTMLElement;
   private readonly dateEl: HTMLElement;
   private readonly playBtn: HTMLButtonElement;
@@ -33,6 +36,8 @@ export class ControlPanel {
     this.root.id = 'control-panel';
     this.root.className = 'glass';
     this.root.innerHTML = /* html */ `
+      <button class="panel-toggle" title="Steuerung ein-/ausklappen" aria-label="Steuerung">⚙&#xFE0E;</button>
+      <div class="panel-body">
       <section>
         <h3>Zeit</h3>
         <div class="sim-date"></div>
@@ -48,6 +53,12 @@ export class ControlPanel {
         <h3>Ansicht</h3>
         <label class="toggle"><input type="checkbox" class="orbits" checked /> Orbitlinien</label>
       </section>
+      <div class="panel-credits">
+        Texturen:
+        <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>
+        (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>)
+      </div>
+      </div>
     `;
     document.body.appendChild(this.root);
 
@@ -56,6 +67,8 @@ export class ControlPanel {
     this.playBtn = q('[data-action="play"]');
     this.reverseBtn = q('[data-action="reverse"]');
     this.speedLabel = q('.speed-value');
+    // Auf kleinen Bildschirmen startet das Panel eingeklappt.
+    this.collapsible = new Collapsible(this.root, q('.panel-toggle'), isCompactUI());
 
     this.playBtn.addEventListener('click', () => {
       clock.paused = !clock.paused;

@@ -7,6 +7,21 @@
   --accent: #ffb347;
   --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
+  --glass-blur: blur(14px) saturate(140%);
+  /* Ränder für Notch und Home-Indikator (viewport-fit=cover) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --statusbar-h: calc(22px + var(--safe-bottom));
+}
+
+/* Touch-Geräte: Weichzeichner hinter den Panels kostet bei jedem Frame GPU-Zeit → deckender statt unscharf. */
+@media (pointer: coarse) and (not (any-pointer: fine)) {
+  :root {
+    --glass-blur: none;
+    --panel-bg: rgba(14, 18, 28, 0.82);
+  }
 }
 
 * {
@@ -34,6 +49,12 @@ body {
 
 a {
   color: var(--text-dim);
+}
+
+button {
+  /* kein Doppeltipp-Zoom, kein grauer Tipp-Blitz */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------- Tooltip ---------- */
@@ -73,7 +94,7 @@ a {
   user-select: none;
 }
 
-#planet-list h3,
+#planet-list .list-toggle,
 #info-panel dt {
   font-size: 10px;
   font-weight: 600;
@@ -82,8 +103,35 @@ a {
   color: var(--text-dim);
 }
 
-#planet-list h3 {
-  margin: 0 6px 8px;
+#planet-list .list-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 2px 6px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+#planet-list .list-toggle:hover {
+  color: var(--text);
+}
+
+#planet-list .chevron {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+#planet-list.collapsed .chevron {
+  transform: rotate(-90deg);
+}
+
+#planet-list.collapsed ul,
+#planet-list.collapsed .hint {
+  display: none;
 }
 
 #planet-list ul {
@@ -146,7 +194,7 @@ a {
 #info-panel {
   position: fixed;
   right: 16px;
-  bottom: 38px;
+  bottom: calc(var(--statusbar-h) + 16px);
   z-index: 20;
   width: 330px;
   max-height: calc(100vh - 330px);
@@ -224,27 +272,6 @@ a {
   }
 }
 
-@media (max-width: 700px) {
-  #planet-list {
-    top: auto;
-    bottom: 30px;
-    left: 8px;
-    width: 150px;
-    max-height: 45vh;
-    overflow-y: auto;
-  }
-
-  #planet-list .hint {
-    display: none;
-  }
-
-  #info-panel {
-    right: 8px;
-    bottom: 30px;
-    width: min(260px, calc(100vw - 176px));
-  }
-}
-
 /* ---------- Ladebildschirm ---------- */
 
 #loading {
@@ -303,8 +330,8 @@ a {
 
 .glass {
   background: var(--panel-bg);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
@@ -319,6 +346,46 @@ a {
   padding: 14px 16px;
   font-size: 12px;
   user-select: none;
+}
+
+#control-panel .panel-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+#control-panel .panel-toggle:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#control-panel.collapsed {
+  width: auto;
+  padding: 0;
+}
+
+#control-panel.collapsed .panel-toggle {
+  position: static;
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: none;
+  font-size: 16px;
+}
+
+#control-panel.collapsed .panel-body,
+.panel-credits {
+  display: none;
 }
 
 #control-panel section + section {
@@ -400,15 +467,6 @@ input[type='range'] {
   accent-color: var(--accent);
 }
 
-@media (max-width: 600px) {
-  #control-panel {
-    top: 8px;
-    right: 8px;
-    width: 210px;
-    padding: 10px 12px;
-  }
-}
-
 /* ---------- Statusleiste ---------- */
 
 #statusbar {
@@ -421,8 +479,8 @@ input[type='range'] {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  height: 22px;
-  padding: 0 10px;
+  height: var(--statusbar-h);
+  padding: 0 calc(10px + var(--safe-right)) var(--safe-bottom) calc(10px + var(--safe-left));
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   border-top: 1px solid var(--panel-border);
@@ -451,5 +509,241 @@ input[type='range'] {
 @media (max-width: 900px) {
   #statusbar .credits {
     display: none;
+  }
+}
+
+/* ---------- Kompakte Oberfläche (Smartphone) ----------
+ * Gleiche Bedingung wie COMPACT_UI_QUERY in solarSystemData.ts.
+ * Oben links: Raumfahrt-Knopf + Gesamtansicht, aufgeklappt eine waagerecht
+ * scrollbare Leiste. Oben rechts: Steuerung als Knopf mit Klapp-Panel.
+ * Unten: Infopanel als Leiste über der Statusleiste. Touch-Ziele ≥ 40 px.
+ */
+@media (max-width: 700px), (max-height: 500px) {
+  /* Container selbst durchlässig, nur die Knöpfe/Leisten fangen Eingaben ab */
+  #planet-list,
+  #control-panel {
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+  }
+
+  #planet-list > *,
+  #control-panel > * {
+    pointer-events: auto;
+  }
+
+  #planet-list .list-toggle,
+  #planet-list .overview-btn,
+  #planet-list ul,
+  #control-panel .panel-toggle,
+  #control-panel.collapsed .panel-toggle,
+  #control-panel .panel-body {
+    background: var(--panel-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Raumfahrt */
+  #planet-list {
+    top: calc(8px + var(--safe-top));
+    left: calc(8px + var(--safe-left));
+    right: calc(60px + var(--safe-right));
+    width: auto;
+    max-height: none;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    gap: 8px;
+    align-items: start;
+  }
+
+  #planet-list .list-toggle,
+  #planet-list .overview-btn {
+    grid-row: 1;
+    width: auto;
+    height: 44px;
+    margin: 0;
+    padding: 0 14px;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  #planet-list .list-toggle {
+    grid-column: 1;
+  }
+
+  #planet-list .overview-btn {
+    grid-column: 2;
+  }
+
+  #planet-list ul {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  #planet-list ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  #planet-list li {
+    flex: 0 0 auto;
+  }
+
+  #planet-list li button,
+  #planet-list li button:hover {
+    min-height: 40px;
+    padding: 0 12px;
+    white-space: nowrap;
+  }
+
+  #planet-list .hint {
+    display: none;
+  }
+
+  /* Steuerung */
+  #control-panel {
+    top: calc(8px + var(--safe-top));
+    right: calc(8px + var(--safe-right));
+    /* aufgeklappt über der Infoleiste (wichtig bei Handy quer) */
+    z-index: 21;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  #control-panel .panel-toggle,
+  #control-panel.collapsed .panel-toggle {
+    position: static;
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+    color: var(--text);
+  }
+
+  #control-panel .panel-body {
+    width: min(300px, calc(100vw - 16px - var(--safe-left) - var(--safe-right)));
+    max-height: calc(100dvh - 76px - var(--safe-top) - var(--statusbar-h));
+    overflow-y: auto;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .btn-row button {
+    height: 40px;
+    font-size: 14px;
+  }
+
+  input[type='range'] {
+    height: 40px;
+    margin: 0;
+  }
+
+  .toggle {
+    min-height: 40px;
+    margin: 0;
+  }
+
+  .toggle input {
+    width: 20px;
+    height: 20px;
+  }
+
+  .panel-credits {
+    display: block;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--panel-border);
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .panel-credits a {
+    display: inline-block;
+    padding: 4px 0;
+  }
+
+  /* Infopanel als Leiste vom unteren Rand */
+  #info-panel {
+    left: 0;
+    right: 0;
+    bottom: var(--statusbar-h);
+    width: auto;
+    min-height: 0;
+    max-height: min(42dvh, 360px);
+    padding: 12px calc(16px + var(--safe-right)) 14px calc(16px + var(--safe-left));
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    transform: translateY(100%);
+    overscroll-behavior: contain;
+  }
+
+  #info-panel.visible {
+    transform: none;
+  }
+
+  #info-panel h2 {
+    padding-right: 44px;
+    margin-bottom: 8px;
+  }
+
+  #info-panel dl {
+    gap: 7px 14px;
+    font-size: 13px;
+  }
+
+  #info-panel dt {
+    font-size: 10px;
+  }
+
+  /* Kein Wert wird abgeschnitten: lange Werte brechen um */
+  #info-panel dd {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #info-panel .close {
+    top: 2px;
+    right: calc(2px + var(--safe-right));
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+
+  /* Statusleiste: nur die wichtigsten Werte */
+  #statusbar .stat:not(.stat-fps, .stat-frame, .stat-calls) {
+    display: none;
+  }
+}
+
+/* Handy quer: wenig Höhe → Infowerte in zwei Spaltenpaaren */
+@media (max-height: 500px) and (min-width: 600px) {
+  #info-panel dl {
+    grid-template-columns: auto 1fr auto 1fr;
+    column-gap: 16px;
+  }
+
+  #info-panel dd {
+    text-align: left;
   }
 }

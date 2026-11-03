@@ -47,7 +47,8 @@ export class StatsBar {
     ];
     for (const [key, label] of items) {
       const item = document.createElement('span');
-      item.className = 'stat';
+      // stat-<key>: Auf kleinen Bildschirmen blendet style.css die weniger wichtigen Werte aus.
+      item.className = `stat stat-${key}`;
       item.innerHTML = `<span class="stat-label">${label}</span> `;
       const value = document.createElement('span');
       value.className = 'stat-value';
