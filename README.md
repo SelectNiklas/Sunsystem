@@ -94,12 +94,12 @@ Alle Faktoren stehen in `src/config/solarSystemData.ts` (`SCALE`).
 
 ## Mobilgeräte
 
-- **Kompakte Oberfläche** bei schmalen (≤ 700 px) oder niedrigen (≤ 500 px) Fenstern (`COMPACT_UI_QUERY`):
+- **Kompakte Oberfläche** auf allen Touch-Geräten ohne Maus (Handy, Tablet – unabhängig von der Größe) sowie bei schmalen (≤ 700 px) oder niedrigen (≤ 500 px) Fenstern (`COMPACT_UI_QUERY`):
   Steuerung und Raumfahrtliste starten eingeklappt; es ist immer höchstens eines aufgeklappt.
   Das Infopanel erscheint als Leiste vom unteren Rand, lange Werte brechen um statt abgeschnitten zu werden.
   Der Bildausschnitt rückt dabei weich nach oben, damit der verfolgte Körper nicht unter der Leiste liegt.
   Alle Touch-Ziele sind mindestens 40 px groß; Notch und Home-Indikator werden freigehalten.
-- Die Statusleiste zeigt auf kleinen Bildschirmen nur FPS, Frame-Time und Draw Calls; die Texturquelle steht dann im Steuerungspanel.
+- Statt der Statusleiste gibt es in der kompakten Ansicht nur eine kleine FPS-Anzeige unten links; die Texturquelle steht dann im Steuerungspanel.
 - **Seitenverhältnis:** Im Hochformat ist der horizontale Bildwinkel der engere. Der Fokusabstand wächst
   deshalb mit `1 / Seitenverhältnis`, Gesamtansicht und Zoomgrenze rücken so weit weg, dass das ganze System in die Breite passt
   (`CAMERA.overviewAspect`).

@@ -513,12 +513,13 @@ input[type='range'] {
 }
 
 /* ---------- Kompakte Oberfläche (Smartphone) ----------
- * Gleiche Bedingung wie COMPACT_UI_QUERY in solarSystemData.ts.
+ * Gleiche Bedingung wie COMPACT_UI_QUERY in solarSystemData.ts: kleines Fenster
+ * oder Touch-Gerät ohne Maus (Handy/Tablet, egal wie groß).
  * Oben links: Raumfahrt-Knopf + Gesamtansicht, aufgeklappt eine waagerecht
  * scrollbare Leiste. Oben rechts: Steuerung als Knopf mit Klapp-Panel.
  * Unten: Infopanel als Leiste über der Statusleiste. Touch-Ziele ≥ 40 px.
  */
-@media (max-width: 700px), (max-height: 500px) {
+@media (max-width: 700px), (max-height: 500px), (pointer: coarse) and (not (any-pointer: fine)) {
   /* Container selbst durchlässig, nur die Knöpfe/Leisten fangen Eingaben ab */
   #planet-list,
   #control-panel {
@@ -730,8 +731,29 @@ input[type='range'] {
     font-size: 24px;
   }
 
-  /* Statusleiste: nur die wichtigsten Werte */
-  #statusbar .stat:not(.stat-fps, .stat-frame, .stat-calls) {
+  /* Keine Statusleiste: nur eine kleine FPS-Anzeige unten links
+   * (Texturquelle steht im Steuerungspanel). Die Infoleiste reicht bis zum Rand. */
+  :root {
+    --statusbar-h: var(--safe-bottom);
+  }
+
+  #statusbar {
+    left: calc(8px + var(--safe-left));
+    right: auto;
+    bottom: calc(6px + var(--safe-bottom));
+    height: auto;
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    pointer-events: none;
+  }
+
+  #statusbar .stat:not(.stat-fps),
+  #statusbar .credits,
+  body:has(#info-panel.visible) #statusbar {
     display: none;
   }
 }

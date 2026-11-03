@@ -25,7 +25,7 @@ export const GRAPHICS = {
 
 const compactQuery = matchMedia(COMPACT_UI_QUERY);
 
-/** Kompakte Oberfläche (kleiner Bildschirm), siehe COMPACT_UI_QUERY. */
+/** Kompakte Oberfläche (kleines Fenster oder Touch-Gerät), siehe COMPACT_UI_QUERY. */
 export function isCompactUI(): boolean {
   return compactQuery.matches;
 }

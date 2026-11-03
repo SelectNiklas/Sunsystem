@@ -792,10 +792,11 @@ export const MOBILE = {
 } as const;
 
 /**
- * Kompakte Oberfläche (Panels einklappbar, Infopanel als Leiste unten).
+ * Kompakte Oberfläche (Panels einklappbar, Infopanel als Leiste unten): kleines
+ * Fenster oder Touch-Gerät ohne Maus (Handy/Tablet, unabhängig von der Größe).
  * Muss mit den Media Queries in style.css übereinstimmen.
  */
-export const COMPACT_UI_QUERY = '(max-width: 700px), (max-height: 500px)';
+export const COMPACT_UI_QUERY = '(max-width: 700px), (max-height: 500px), (pointer: coarse) and (not (any-pointer: fine))';
 
 export const CAMERA = {
   fov: 50,
